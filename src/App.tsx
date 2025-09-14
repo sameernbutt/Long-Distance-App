@@ -26,6 +26,7 @@ import Feedback from './components/Feedback';
 import Login from './components/Login';
 import PartnerPairing from './components/PartnerPairing';
 import MoodSharing from './components/MoodSharing';
+import VideoSharing from './components/VideoSharing';
 
 // Import contexts
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -56,7 +57,16 @@ function AppContent() {
     if (saved) {
       setCoupleNames(JSON.parse(saved));
     }
-  }, []);
+
+    // Check for pairing code in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const pairCode = urlParams.get('pairCode');
+    
+    if (pairCode && user) {
+      // Automatically open partner pairing with the code
+      setShowPartnerPairing(true);
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -129,6 +139,7 @@ function AppContent() {
           <div className="space-y-6">
             <PhotoGallery />
             <MusicSharing />
+            <VideoSharing />
           </div>
         );
       case 'dates':

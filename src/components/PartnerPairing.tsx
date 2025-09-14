@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Users, Copy, Check, UserPlus, Link } from 'lucide-react';
 import { createPartnerConnection, joinPartnerConnection } from '../firebase/partners';
 
@@ -12,10 +12,23 @@ export default function PartnerPairing({ onBack, onSuccess, userId }: PartnerPai
   const [mode, setMode] = useState<'create' | 'join'>('create');
   const [partnerCode, setPartnerCode] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
+  const [generatedLink, setGeneratedLink] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  // Check for URL parameters on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pairCode = urlParams.get('pairCode');
+    
+    if (pairCode) {
+      setMode('join');
+      setPartnerCode(pairCode.toUpperCase());
+    }
+  }, []);
 
   const generateCode = async () => {
     setLoading(true);
@@ -29,7 +42,11 @@ export default function PartnerPairing({ onBack, onSuccess, userId }: PartnerPai
         setError(result.error);
       } else {
         setGeneratedCode(code);
-        setSuccess('Partner code generated! Share this with your partner.');
+        // Generate shareable link
+        const baseUrl = window.location.origin;
+        const shareLink = `${baseUrl}?pairCode=${code}`;
+        setGeneratedLink(shareLink);
+        setSuccess('Partner code and link generated! Share either with your partner.');
       }
     } catch (err: any) {
       setError(err.message || 'Failed to generate code');
@@ -68,6 +85,16 @@ export default function PartnerPairing({ onBack, onSuccess, userId }: PartnerPai
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy code:', err);
+    }
+  };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedLink);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
     }
   };
 
@@ -155,10 +182,11 @@ export default function PartnerPairing({ onBack, onSuccess, userId }: PartnerPai
                   disabled={loading}
                   className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:from-blue-600 hover:to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
                 >
-                  {loading ? 'Generating...' : 'Generate Code'}
+                  {loading ? 'Generating...' : 'Generate Code & Link'}
                 </button>
               ) : (
                 <div className="space-y-4">
+                  {/* Code Section */}
                   <div className="bg-gray-50 rounded-lg p-4 text-center">
                     <p className="text-sm text-gray-600 mb-2">Your partner code:</p>
                     <div className="flex items-center justify-center space-x-2">
@@ -173,13 +201,32 @@ export default function PartnerPairing({ onBack, onSuccess, userId }: PartnerPai
                       </button>
                     </div>
                   </div>
-                  
+
+                  {/* Link Section */}
                   <div className="bg-blue-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-blue-800 mb-2">Next Steps:</h3>
-                    <ol className="text-sm text-blue-700 space-y-1">
-                      <li>1. Share this code with your partner</li>
-                      <li>2. Ask them to select "Join with Code"</li>
-                      <li>3. They'll enter this code to connect</li>
+                    <p className="text-sm text-gray-600 mb-2">Or share this link:</p>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={generatedLink}
+                        readOnly
+                        className="flex-1 p-2 text-xs bg-white border border-blue-200 rounded text-gray-600"
+                      />
+                      <button
+                        onClick={copyLink}
+                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                      >
+                        {linkCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <h3 className="font-semibold text-green-800 mb-2">Next Steps:</h3>
+                    <ol className="text-sm text-green-700 space-y-1">
+                      <li>1. Share the code or link with your partner</li>
+                      <li>2. They can use either method to connect</li>
+                      <li>3. Once connected, you can share moods together!</li>
                     </ol>
                   </div>
                 </div>
