@@ -168,12 +168,24 @@ A comprehensive mobile-first Progressive Web App (PWA) for long-distance couples
 - All dependencies stable and working  
 
 ## �� Key Technical Decisions
-- Firebase over Supabase - Better mobile integration  
-- PWA over native - Cross-platform compatibility  
 - TypeScript - Type safety and better development  
 - Tailwind CSS - Rapid mobile-first styling  
 - Context API - Simple state management for auth  
-- localStorage - Client-side caching for performance  
+- localStorage - Client-side caching for performance
+
+
+## 🚧 Recent Progress & Technology Highlights
+
+### Latest Updates
+- **Pairing Functionality Added:** Users can now pair with their partners using unique codes, enhancing the connection experience for long-distance couples.
+- **Mood Sharing:** Partners can share their moods in real-time, fostering better communication and emotional support.
+- **Expanded Feed Features:** The shared feed now supports richer content, allowing couples to share photos, videos, and music seamlessly.
+- Note that these have not been tested yet.
+
+### Firebase Authentication
+This app leverages **Firebase** for secure and scalable user authentication. Both email/password and Google OAuth are supported, ensuring a smooth and reliable login experience. Firebase also powers the real-time database and storage solutions for all shared content.
+
+_See the full commit history for more details: [Recent Commits](https://github.com/sameernbutt/Long-Distance-App/commits?per_page=2)_
 
 ---
 
