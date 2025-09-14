@@ -30,8 +30,107 @@ const moods: Mood[] = [
     emoji: '🤩',
     color: 'text-pink-600',
     bgColor: 'bg-pink-100'
-  }
+  },
+  {
+    id: 'hungry',
+    name: 'Hungry',
+    emoji: '😋',
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-100'
+  },
+  {
+    id: 'tired',
+    name: 'Tired',
+    emoji: '🥱',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-100'
+  },
+  {
+    id: 'nervous',
+    name: 'Nervous',
+    emoji: '😰',
+    color: 'text-red-600',
+    bgColor: 'bg-red-100'
+  },
+  {
+    id: 'anxious',
+    name: 'Anxious',
+    emoji: '😟',
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-100'
+  },
+  {
+    id: 'sensitive',
+    name: 'Sensitive',
+    emoji: '🥺',
+    color: 'text-rose-600',
+    bgColor: 'bg-rose-100'
+  },
+  {
+    id: 'stressed',
+    name: 'Stressed',
+    emoji: '😫',
+    color: 'text-red-700',
+    bgColor: 'bg-red-200'
+  },
+  {
+    id: 'content',
+    name: 'Content',
+    emoji: '🙂',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100'
+  },
+  {
+    id: 'chill',
+    name: 'Chill',
+    emoji: '😎',
+    color: 'text-teal-600',
+    bgColor: 'bg-teal-100'
+  },
+  {
+    id: 'motivated',
+    name: 'Motivated',
+    emoji: '😄',
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-100'
+  },
+  {
+    id: 'frustrated',
+    name: 'Frustrated',
+    emoji: '😤',
+    color: 'text-orange-700',
+    bgColor: 'bg-orange-200'
+  },
+  {
+    id: 'calm',
+    name: 'Calm',
+    emoji: '😌',
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-100'
+  },
+  {
+    id: 'bored',
+    name: 'Bored',
+    emoji: '😐',
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-100'
+  },
+  {
+    id: 'horny',
+    name: 'Horny',
+    emoji: '😏',
+    color: 'text-pink-700',
+    bgColor: 'bg-pink-200'
+  },  
+  {
+    id: 'energized',
+    name: 'Energized',
+    emoji: '🤩',
+    color: 'text-yellow-700',
+    bgColor: 'bg-yellow-200'
+  }  
 ];
+
 
 export default function MoodSharing() {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
@@ -107,12 +206,12 @@ export default function MoodSharing() {
       {/* Mood Selection */}
       <div className="mb-6">
         <h4 className="text-sm font-medium text-gray-700 mb-3">How are you feeling?</h4>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="flex space-x-3 overflow-x-auto pb-2">
           {moods.map((mood) => (
             <button
               key={mood.id}
               onClick={() => handleMoodSelect(mood.id)}
-              className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+              className={`flex-shrink-0 w-24 p-4 rounded-xl border-2 transition-all duration-200 ${
                 selectedMood === mood.id
                   ? `border-${mood.color.split('-')[1]}-300 ${mood.bgColor}`
                   : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -124,6 +223,7 @@ export default function MoodSharing() {
           ))}
         </div>
       </div>
+
 
       {/* Message Input */}
       {selectedMood && (
