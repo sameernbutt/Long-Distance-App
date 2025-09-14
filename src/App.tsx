@@ -9,7 +9,8 @@ import {
   Rss,
   HelpCircle,
   MessageSquare,
-  LogIn
+  LogIn,
+  LogOut
 } from 'lucide-react';
 
 // Import all components
@@ -28,6 +29,7 @@ import MoodSharing from './components/MoodSharing';
 
 // Import contexts
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { signOutUser } from './firebase/auth';
 
 type TabType = 'home' | 'activities' | 'profile' | 'feed' | 'dates';
 
@@ -40,7 +42,7 @@ const tabs = [
 ];
 
 function AppContent() {
-  const { user, loading } = useAuth();
+  const { user, userProfile, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -55,6 +57,15 @@ function AppContent() {
       setCoupleNames(JSON.parse(saved));
     }
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOutUser();
+      setIsMenuOpen(false);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   // Show loading screen while checking authentication (only briefly)
   if (loading) {
@@ -178,6 +189,11 @@ function AppContent() {
                   <div>
                     <h2 className="text-lg font-bold text-gray-800">{getAppTitle()}</h2>
                     <p className="text-sm text-gray-600">Long Distance Love</p>
+                    {user && userProfile && (
+                      <p className="text-xs text-pink-600 font-medium">
+                        Hi {userProfile.displayName}!
+                      </p>
+                    )}
                   </div>
                 </div>
                 <button
@@ -235,16 +251,26 @@ function AppContent() {
                     <MessageSquare className="w-4 h-4 text-gray-500" />
                     <span className="text-sm font-medium">Feedback</span>
                   </button>
-                  <button 
-                    onClick={() => {
-                      setShowLogin(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <LogIn className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm font-medium">Login</span>
-                  </button>
+                  {user ? (
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full flex items-center space-x-3 px-3 py-2.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <LogOut className="w-4 h-4 text-red-500" />
+                      <span className="text-sm font-medium">Logout</span>
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => {
+                        setShowLogin(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <LogIn className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm font-medium">Login</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </nav>
@@ -291,6 +317,11 @@ function AppContent() {
               <div>
                 <h2 className="text-lg font-bold text-gray-800">{getAppTitle()}</h2>
                 <p className="text-sm text-gray-600">Long Distance Love</p>
+                {user && userProfile && (
+                  <p className="text-xs text-pink-600 font-medium">
+                    Hi {userProfile.displayName}!
+                  </p>
+                )}
               </div>
             </div>
             <button
@@ -339,13 +370,23 @@ function AppContent() {
                 <MessageSquare className="w-4 h-4 text-gray-500" />
                 <span className="text-sm font-medium">Feedback</span>
               </button>
-              <button 
-                onClick={() => setShowLogin(true)}
-                className="w-full flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <LogIn className="w-4 h-4 text-gray-500" />
-                <span className="text-sm font-medium">Login</span>
-              </button>
+              {user ? (
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center space-x-3 px-3 py-2.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <LogOut className="w-4 h-4 text-red-500" />
+                  <span className="text-sm font-medium">Logout</span>
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setShowLogin(true)}
+                  className="w-full flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <LogIn className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm font-medium">Login</span>
+                </button>
+              )}
             </div>
           </div>
         </nav>
