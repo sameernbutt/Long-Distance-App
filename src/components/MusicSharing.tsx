@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Music, Plus, Heart, ExternalLink, X, Search } from 'lucide-react';
+import { Music, Plus, Heart, ExternalLink, X, Search, Share2 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { addFeedItem, getFeedItems } from '../firebase/feed';
+import { getPartnerId } from '../firebase/moods';
 
 interface Song {
   id: string;
@@ -20,16 +23,9 @@ interface Playlist {
 }
 
 export default function MusicSharing() {
-  const [songs, setSongs] = useState<Song[]>(() => {
-    const saved = localStorage.getItem('sharedSongs');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [playlists, setPlaylists] = useState<Playlist[]>(() => {
-    const saved = localStorage.getItem('sharedPlaylists');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  const { user, userProfile } = useAuth();
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isAddingSong, setIsAddingSong] = useState(false);
   const [newSong, setNewSong] = useState({
     title: '',
@@ -39,42 +35,87 @@ export default function MusicSharing() {
     note: ''
   });
 
-  const [currentUser, setCurrentUser] = useState(() => {
-    return localStorage.getItem('currentUser') || 'You';
-  });
-
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'songs' | 'playlists'>('songs');
+  const [loading, setLoading] = useState(false);
+  const [partnerId, setPartnerId] = useState<string | null>(null);
 
+  // Load partner ID and feed items
   useEffect(() => {
-    localStorage.setItem('sharedSongs', JSON.stringify(songs));
-  }, [songs]);
-
-  useEffect(() => {
-    localStorage.setItem('sharedPlaylists', JSON.stringify(playlists));
-  }, [playlists]);
-
-  useEffect(() => {
-    localStorage.setItem('currentUser', currentUser);
-  }, [currentUser]);
-
-  const addSong = () => {
-    if (!newSong.title.trim() || !newSong.artist.trim()) return;
-
-    const song: Song = {
-      id: Date.now().toString(),
-      title: newSong.title.trim(),
-      artist: newSong.artist.trim(),
-      url: newSong.url.trim() || undefined,
-      addedBy: newSong.addedBy.trim() || currentUser,
-      timestamp: Date.now(),
-      note: newSong.note.trim() || undefined,
-      isFavorite: false
+    const loadData = async () => {
+      if (user?.uid) {
+        const partner = await getPartnerId(user.uid);
+        setPartnerId(partner);
+        
+        if (partner) {
+          // Load feed items (music) for both users
+          const { items } = await getFeedItems(user.uid, partner);
+          const musicItems = items.filter(item => item.type === 'music');
+          
+          // Convert feed items to songs format
+          const feedSongs: Song[] = musicItems.map(item => ({
+            id: item.id,
+            title: item.caption.split(' - ')[0] || 'Unknown Title',
+            artist: item.caption.split(' - ')[1] || 'Unknown Artist',
+            url: item.content,
+            addedBy: item.userName,
+            timestamp: item.timestamp,
+            note: item.caption.includes(' - ') ? item.caption.split(' - ').slice(2).join(' - ') : item.caption,
+            isFavorite: false
+          }));
+          
+          setSongs(feedSongs);
+        }
+      }
     };
 
-    setSongs(prev => [song, ...prev]);
-    setNewSong({ title: '', artist: '', url: '', addedBy: '', note: '' });
-    setIsAddingSong(false);
+    loadData();
+  }, [user?.uid]);
+
+  const addSong = async () => {
+    if (!newSong.title.trim() || !newSong.artist.trim() || !user?.uid) return;
+
+    setLoading(true);
+
+    try {
+      const caption = `${newSong.title.trim()} - ${newSong.artist.trim()}${newSong.note.trim() ? ` - ${newSong.note.trim()}` : ''}`;
+      
+      // Add to feed if user has a partner
+      if (partnerId) {
+        const result = await addFeedItem(
+          user.uid,
+          userProfile?.displayName || user.email || 'Unknown User',
+          userProfile?.photoURL,
+          'music',
+          newSong.url.trim() || '',
+          caption
+        );
+        
+        if (result.error) {
+          console.error('Failed to share music:', result.error);
+        }
+      }
+
+      // Also add locally for immediate UI update
+      const song: Song = {
+        id: Date.now().toString(),
+        title: newSong.title.trim(),
+        artist: newSong.artist.trim(),
+        url: newSong.url.trim() || undefined,
+        addedBy: userProfile?.displayName || user.email || 'You',
+        timestamp: Date.now(),
+        note: newSong.note.trim() || undefined,
+        isFavorite: false
+      };
+
+      setSongs(prev => [song, ...prev]);
+      setNewSong({ title: '', artist: '', url: '', addedBy: '', note: '' });
+      setIsAddingSong(false);
+    } catch (error) {
+      console.error('Error adding song:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleFavorite = (id: string) => {
@@ -125,17 +166,19 @@ export default function MusicSharing() {
       </div>
 
       <div className="max-w-4xl mx-auto">
-        {/* User Selection */}
+        {/* Partner Status */}
         <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100 mb-6">
-          <div className="flex items-center space-x-4">
-            <label className="text-sm font-medium text-gray-700">Adding as:</label>
-            <input
-              type="text"
-              value={currentUser}
-              onChange={(e) => setCurrentUser(e.target.value)}
-              className="px-3 py-1 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              placeholder="Your name"
-            />
+          <div className="text-center">
+            <div className="text-sm text-gray-600 mb-1">Music Sharing Status</div>
+            <div className="text-lg font-semibold text-gray-800">
+              {partnerId ? 'Connected with Partner' : 'Not Paired'}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              {partnerId 
+                ? 'Share music with your partner in real-time!'
+                : 'Pair with your partner to share music together'
+              }
+            </div>
           </div>
         </div>
 
@@ -379,7 +422,7 @@ export default function MusicSharing() {
                   value={newSong.addedBy}
                   onChange={(e) => setNewSong(prev => ({ ...prev, addedBy: e.target.value }))}
                   className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                  placeholder={currentUser}
+                  placeholder={userProfile?.displayName || user?.email || 'You'}
                 />
               </div>
 
@@ -398,10 +441,20 @@ export default function MusicSharing() {
             <div className="flex space-x-3 mt-6">
               <button
                 onClick={addSong}
-                disabled={!newSong.title.trim() || !newSong.artist.trim()}
+                disabled={!newSong.title.trim() || !newSong.artist.trim() || loading}
                 className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
               >
-                Add Song
+                {loading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Sharing...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center space-x-2">
+                    <Share2 className="w-4 h-4" />
+                    <span>Share Song</span>
+                  </div>
+                )}
               </button>
               <button
                 onClick={() => setIsAddingSong(false)}
