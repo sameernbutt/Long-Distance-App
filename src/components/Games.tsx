@@ -1,52 +1,70 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dice1, Heart, Zap, Users } from 'lucide-react';
+import { parse } from 'csv-parse/browser/esm';
 
-const wouldYouRatherQuestions = [
-  "Would you rather have the ability to fly or be invisible?",
-  "Would you rather always be 10 minutes late or 20 minutes early?",
-  "Would you rather have dinner with your favorite celebrity or favorite historical figure?",
-  "Would you rather live without music or live without movies?",
-  "Would you rather be able to speak all languages or play all instruments?",
-  "Would you rather have unlimited money or unlimited time?",
-  "Would you rather live in the mountains or by the ocean?",
-  "Would you rather never be able to lie or never be able to tell the truth?",
-  "Would you rather have the perfect job or the perfect relationship?",
-  "Would you rather be famous or have your best friend be famous?",
-];
+// Define the types for our game prompts
+type WouldYouRatherQuestion = string;
 
-const truthOrDarePrompts = {
-  truth: [
-    "What's your biggest fear about our relationship?",
-    "What's the most embarrassing thing that happened to you this week?",
-    "What's one thing you've never told me?",
-    "What's your biggest turn-on?",
-    "What's something you wish we did more often?",
-    "What's your biggest regret?",
-    "What's the weirdest dream you've ever had?",
-    "What's your most irrational fear?",
-    "What's something you're secretly proud of?",
-    "What's your guilty pleasure?",
-  ],
-  dare: [
-    "Send me a selfie making your silliest face",
-    "Do 10 jumping jacks right now",
-    "Sing 'Happy Birthday' to me",
-    "Tell me about your day using only emojis",
-    "Do your best impression of a celebrity",
-    "Share your screen and show me your most played song",
-    "Write a short poem about our relationship",
-    "Do a little dance for 30 seconds",
-    "Take a photo of your current view and send it",
-    "Tell me three things you love about me in different accents",
-  ],
-};
+interface TruthOrDarePrompts {
+  truth: string;
+  dare: string;
+}
 
 export default function Games() {
   const [activeGame, setActiveGame] = useState<'would-you-rather' | 'truth-or-dare' | null>(null);
   const [currentPrompt, setCurrentPrompt] = useState('');
   const [gameHistory, setGameHistory] = useState<string[]>([]);
+  const [wouldYouRatherQuestions, setWouldYouRatherQuestions] = useState<WouldYouRatherQuestion[]>([]);
+  const [truthOrDarePrompts, setTruthOrDarePrompts] = useState<TruthOrDarePrompts[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Use useEffect to fetch and parse the CSV files
+  useEffect(() => {
+    const fetchGameData = async () => {
+      try {
+        // Fetch Would You Rather questions
+        const wyrResponse = await fetch('/resources/wouldYouRather.csv');
+        const wyrText = await wyrResponse.text();
+
+        // Fetch Truth or Dare prompts
+        const todResponse = await fetch('/resources/truthOrDare.csv');
+        const todText = await todResponse.text();
+
+        const [wyrRecords, todRecords] = await Promise.all([
+          new Promise<string[][]>((resolve, reject) => {
+            parse(wyrText, { columns: false, skip_empty_lines: true }, (err, records) => {
+              if (err) reject(err);
+              resolve(records);
+            });
+          }),
+          new Promise<TruthOrDarePrompts[]>((resolve, reject) => {
+            parse(todText, {
+              columns: ['truth', 'dare'], // Explicitly name the columns
+              skip_empty_lines: true,
+            }, (err, records: TruthOrDarePrompts[]) => {
+              if (err) reject(err);
+              resolve(records);
+            });
+          })
+        ]);
+
+        // Process the data
+        const wouldYouRatherList = wyrRecords.map(row => row[0]);
+        setWouldYouRatherQuestions(wouldYouRatherList);
+        setTruthOrDarePrompts(todRecords);
+        
+      } catch (error) {
+        console.error('Error loading game data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGameData();
+  }, []);
 
   const generateWouldYouRather = () => {
+    if (wouldYouRatherQuestions.length === 0) return;
     const randomQuestion = wouldYouRatherQuestions[Math.floor(Math.random() * wouldYouRatherQuestions.length)];
     setCurrentPrompt(randomQuestion);
     setActiveGame('would-you-rather');
@@ -54,13 +72,21 @@ export default function Games() {
   };
 
   const generateTruthOrDare = (type: 'truth' | 'dare') => {
-    const prompts = truthOrDarePrompts[type];
-    const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+    if (truthOrDarePrompts.length === 0) return;
+    const randomPrompt = truthOrDarePrompts[Math.floor(Math.random() * truthOrDarePrompts.length)][type];
     setCurrentPrompt(randomPrompt);
     setActiveGame('truth-or-dare');
     setGameHistory(prev => [`${type.toUpperCase()}: ${randomPrompt}`, ...prev.slice(0, 4)]);
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-4 md:p-6 text-center text-gray-500">
+        Loading games...
+      </div>
+    );
+  }
+  
   return (
     <div className="p-4 md:p-6">
       <div className="text-center mb-6">
