@@ -134,7 +134,6 @@ function AppContent() {
         return (
           <div className="space-y-6">
             <Games />
-            <DailyQuestions />
           </div>
         );
       case 'profile':
