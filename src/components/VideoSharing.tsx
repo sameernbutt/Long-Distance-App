@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Video, Upload, Heart, X, Play, Share2 } from 'lucide-react';
+import { Video, Upload, Heart, X, Play } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { addFeedItem, getFeedItems, uploadFile } from '../firebase/feed';
 import { getPartnerId } from '../firebase/moods';
@@ -63,12 +63,10 @@ export default function VideoSharing() {
     setIsUploading(true);
 
     try {
-      let videoUrl: string;
-      
+      let videoUrl: string | undefined = undefined;
       // Upload to Firebase Storage if user has a partner
       if (partnerId) {
         videoUrl = await uploadFile(file, user.uid);
-        
         // Add to feed
         const result = await addFeedItem(
           user.uid,
@@ -78,22 +76,20 @@ export default function VideoSharing() {
           videoUrl,
           caption.trim() || 'Shared with love 💕'
         );
-        
         if (result.error) {
           console.error('Failed to share video:', result.error);
         }
       } else {
         // Use local URL for immediate preview
-        await new Promise(resolve => {
+        videoUrl = await new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onload = (e) => {
-            videoUrl = e.target?.result as string;
-            resolve(videoUrl);
+            resolve(e.target?.result as string);
           };
           reader.readAsDataURL(file);
         });
       }
-
+      if (!videoUrl) throw new Error('No video URL');
       // Add to local state for immediate UI update
       const newVideo: VideoItem = {
         id: Date.now().toString(),
@@ -103,7 +99,6 @@ export default function VideoSharing() {
         isFavorite: false,
         thumbnail: videoUrl // For now, use the video URL as thumbnail
       };
-      
       setVideos(prev => [newVideo, ...prev]);
       setCaption('');
       event.target.value = '';
@@ -182,29 +177,48 @@ export default function VideoSharing() {
               />
             </div>
 
-            <label 
-              htmlFor="video-upload"
-              className={`inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 cursor-pointer transition-all duration-200 ${
-                isUploading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {isUploading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Uploading...</span>
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-5 h-5" />
-                  <span>Share Video</span>
-                </>
-              )}
-            </label>
-            
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <label 
+                htmlFor="video-upload"
+                className={`inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 cursor-pointer transition-all duration-200 ${
+                  isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {isUploading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-5 h-5" />
+                    <span>Choose Video</span>
+                  </>
+                )}
+              </label>
+              <label
+                htmlFor="video-capture"
+                className={`inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-400 to-purple-400 text-white rounded-xl hover:from-pink-500 hover:to-purple-500 cursor-pointer transition-all duration-200 ${
+                  isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                <Video className="w-5 h-5" />
+                <span>Record Video</span>
+              </label>
+            </div>
             <input
               id="video-upload"
               type="file"
               accept="video/*"
+              onChange={handleFileUpload}
+              disabled={isUploading}
+              className="hidden"
+            />
+            <input
+              id="video-capture"
+              type="file"
+              accept="video/*"
+              capture="environment"
               onChange={handleFileUpload}
               disabled={isUploading}
               className="hidden"

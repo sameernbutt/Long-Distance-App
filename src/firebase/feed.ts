@@ -1,3 +1,53 @@
+// Add a comment to a feed item
+export const addComment = async (
+  itemId: string,
+  userId: string,
+  userName: string,
+  content: string
+) => {
+  try {
+    const comment = {
+      id: `${userId}_${Date.now()}`,
+      userId,
+      userName,
+      content,
+      timestamp: Date.now(),
+    };
+    const itemRef = doc(db, 'feed', itemId);
+    await updateDoc(itemRef, {
+      comments: arrayUnion(comment),
+    });
+    return { error: null };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+};
+
+// Add or remove an emoji reaction to a feed item
+export const toggleReaction = async (
+  itemId: string,
+  userId: string,
+  emoji: string
+) => {
+  try {
+    const itemRef = doc(db, 'feed', itemId);
+    const itemSnap = await getDoc(itemRef);
+    if (!itemSnap.exists()) return { error: 'Item not found' };
+    const item = itemSnap.data();
+    let reactions = item.reactions || {};
+    if (!reactions[emoji]) reactions[emoji] = [];
+    if (reactions[emoji].includes(userId)) {
+      reactions[emoji] = reactions[emoji].filter((id: string) => id !== userId);
+      if (reactions[emoji].length === 0) delete reactions[emoji];
+    } else {
+      reactions[emoji].push(userId);
+    }
+    await updateDoc(itemRef, { reactions });
+    return { error: null };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+};
 import { 
   collection, 
   addDoc, 
@@ -12,6 +62,7 @@ import {
   arrayRemove
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { getDoc } from 'firebase/firestore';
 import { db, storage } from './config';
 
 export interface FeedItem {
@@ -25,6 +76,7 @@ export interface FeedItem {
   timestamp: number;
   likes: string[]; // Array of user IDs who liked
   comments: FeedComment[];
+  reactions?: { [emoji: string]: string[] };
 }
 
 export interface FeedComment {
