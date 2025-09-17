@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, Heart, MessageCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { getPartnerId } from '../firebase/moods';
+import { saveDailyAnswer, getCoupleAnswers } from '../firebase/dailyQuestions';
 
 const questions = [
   "What's one thing that made you smile today?",
@@ -27,42 +30,61 @@ const questions = [
 export default function DailyQuestions() {
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [answer, setAnswer] = useState('');
-  const [savedAnswers, setSavedAnswers] = useState<{[key: string]: string}>({});
+  const [coupleAnswers, setCoupleAnswers] = useState<{ [uid: string]: { answer: string, name: string } }>({});
+  // const [loading, setLoading] = useState(false);
+  const { user, userProfile } = useAuth();
+  const [partnerId, setPartnerId] = useState<string | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('dailyAnswers');
-    if (saved) {
-      setSavedAnswers(JSON.parse(saved));
-    }
-    
+    if (!user) return;
+    getPartnerId(user.uid).then(pid => setPartnerId(pid));
     const today = new Date().toDateString();
     const savedQuestion = localStorage.getItem('dailyQuestion');
     const savedDate = localStorage.getItem('questionDate');
-    
     if (savedDate === today && savedQuestion) {
       setCurrentQuestion(savedQuestion);
-      if (saved) {
-        const answers = JSON.parse(saved);
-        setAnswer(answers[savedQuestion] || '');
-      }
     } else {
       generateNewQuestion();
     }
-  }, []);
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || !partnerId || !currentQuestion) return;
+  // setLoading(true);
+    const today = new Date().toDateString();
+    getCoupleAnswers(user.uid, partnerId, today).then((answers) => {
+      const ansObj: { [uid: string]: { answer: string, name: string } } = {};
+      answers.forEach(a => {
+        ansObj[a.userId] = { answer: a.answer, name: a.userId === user.uid ? (userProfile?.displayName || 'You') : 'Partner' };
+      });
+      setCoupleAnswers(ansObj);
+      setAnswer(ansObj[user.uid]?.answer || '');
+  // setLoading(false);
+    });
+  }, [user, partnerId, currentQuestion, userProfile]);
 
   const generateNewQuestion = () => {
     const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
     setCurrentQuestion(randomQuestion);
-    setAnswer(savedAnswers[randomQuestion] || '');
+  setAnswer('');
     
     localStorage.setItem('dailyQuestion', randomQuestion);
     localStorage.setItem('questionDate', new Date().toDateString());
   };
 
-  const saveAnswer = () => {
-    const newAnswers = { ...savedAnswers, [currentQuestion]: answer };
-    setSavedAnswers(newAnswers);
-    localStorage.setItem('dailyAnswers', JSON.stringify(newAnswers));
+  const saveAnswer = async () => {
+    if (!user) return;
+    const today = new Date().toDateString();
+    await saveDailyAnswer(user.uid, currentQuestion, answer, today);
+    // Refresh couple answers
+    if (partnerId) {
+      const answers = await getCoupleAnswers(user.uid, partnerId, today);
+      const ansObj: { [uid: string]: { answer: string, name: string } } = {};
+      answers.forEach(a => {
+        ansObj[a.userId] = { answer: a.answer, name: a.userId === user.uid ? (userProfile?.displayName || 'You') : 'Partner' };
+      });
+      setCoupleAnswers(ansObj);
+    }
   };
 
   return (
@@ -101,6 +123,7 @@ export default function DailyQuestions() {
             placeholder="Share your thoughts..."
             className="w-full p-3 md:p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-sm md:text-base"
             rows={4}
+            disabled={!!coupleAnswers[user?.uid]?.answer}
           />
           <div className="flex justify-between items-center mt-4">
             <span className="text-sm text-gray-500">
@@ -108,7 +131,7 @@ export default function DailyQuestions() {
             </span>
             <button
               onClick={saveAnswer}
-              disabled={!answer.trim()}
+              disabled={!answer.trim() || !!coupleAnswers[user?.uid]?.answer}
               className="flex items-center space-x-2 px-4 md:px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm md:text-base"
             >
               <Heart className="w-4 h-4" />
@@ -117,19 +140,17 @@ export default function DailyQuestions() {
           </div>
         </div>
 
-        {Object.keys(savedAnswers).length > 0 && (
-          <div className="mt-8">
-            <h4 className="font-semibold text-gray-800 mb-4">Previous Answers</h4>
-            <div className="space-y-4 max-h-64 overflow-y-auto">
-              {Object.entries(savedAnswers).slice(-5).map(([question, ans], index) => (
-                <div key={index} className="bg-gray-50 rounded-xl p-4 border">
-                  <p className="font-medium text-gray-700 mb-2 text-sm">{question}</p>
-                  <p className="text-gray-600 text-sm">{ans}</p>
-                </div>
-              ))}
-            </div>
+        <div className="mt-8">
+          <h4 className="font-semibold text-gray-800 mb-4">Today's Answers</h4>
+          <div className="space-y-4">
+            {Object.entries(coupleAnswers).map(([uid, val]) => (
+              <div key={uid} className="bg-gray-50 rounded-xl p-4 border">
+                <p className="font-medium text-gray-700 mb-2 text-sm">{val.name}</p>
+                <p className="text-gray-600 text-sm">{val.answer}</p>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
