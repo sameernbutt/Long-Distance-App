@@ -28,6 +28,11 @@ import PartnerPairing from './components/PartnerPairing';
 import MoodSharing from './components/MoodSharing';
 import VideoSharing from './components/VideoSharing';
 
+
+import FeedShareMenu from './components/FeedShareMenu';
+import FeedList from './components/FeedList';
+// import { useAuth } from './contexts/AuthContext';
+import { getPartnerId } from './firebase/moods';
 // Import contexts
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { signOutUser } from './firebase/auth';
@@ -134,14 +139,79 @@ function AppContent() {
         );
       case 'profile':
         return <Profile onPairPartner={() => setShowPartnerPairing(true)} />;
+
       case 'feed':
         return (
-          <div className="space-y-6">
+          <FeedPage />
+        );
+
+// FeedPage component for the feed tab
+
+
+function FeedPage() {
+  const [showPhoto, setShowPhoto] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [showMusic, setShowMusic] = useState(false);
+  const { user } = useAuth();
+  const [partnerId, setPartnerId] = useState<string>('');
+
+  useEffect(() => {
+    if (user) {
+      getPartnerId(user.uid).then((id) => setPartnerId(id || ''));
+    }
+  }, [user]);
+
+  return (
+    <div className="relative flex flex-col items-center min-h-[60vh] px-4 py-10">
+      <div className="mb-8 text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Your Shared Feed</h2>
+        <p className="text-gray-600 max-w-md mx-auto">
+          Photos, videos, and music links that you and your partner share will appear here. Start sharing your moments!
+        </p>
+      </div>
+      <FeedShareMenu
+        onSharePhoto={() => setShowPhoto(true)}
+        onShareVideo={() => setShowVideo(true)}
+        onShareMusic={() => setShowMusic(true)}
+      />
+      <div className="mt-8 w-full">
+        {partnerId && <FeedList partnerId={partnerId} />}
+      </div>
+
+      {/* Modals for sharing */}
+      {showPhoto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-4 w-full max-w-md relative">
+            <button className="absolute top-2 right-2 text-gray-400 hover:text-pink-500" onClick={() => setShowPhoto(false)}>
+              <X className="w-5 h-5" />
+            </button>
             <PhotoGallery />
-            <MusicSharing />
+          </div>
+        </div>
+      )}
+      {showVideo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-4 w-full max-w-md relative">
+            <button className="absolute top-2 right-2 text-gray-400 hover:text-purple-500" onClick={() => setShowVideo(false)}>
+              <X className="w-5 h-5" />
+            </button>
             <VideoSharing />
           </div>
-        );
+        </div>
+      )}
+      {showMusic && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-4 w-full max-w-md relative">
+            <button className="absolute top-2 right-2 text-gray-400 hover:text-blue-500" onClick={() => setShowMusic(false)}>
+              <X className="w-5 h-5" />
+            </button>
+            <MusicSharing />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
       case 'dates':
         return <VirtualDates />;
       default:

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Upload, Heart, X, Download, Share2 } from 'lucide-react';
+import { Camera, Upload, Heart, X, Download } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { addFeedItem, getFeedItems, uploadFile } from '../firebase/feed';
 import { getPartnerId } from '../firebase/moods';
@@ -61,12 +61,10 @@ export default function PhotoGallery() {
     setIsUploading(true);
 
     try {
-      let photoUrl: string;
-      
+      let photoUrl: string | undefined = undefined;
       // Upload to Firebase Storage if user has a partner
       if (partnerId) {
         photoUrl = await uploadFile(file, user.uid);
-        
         // Add to feed
         const result = await addFeedItem(
           user.uid,
@@ -76,28 +74,20 @@ export default function PhotoGallery() {
           photoUrl,
           caption.trim() || 'Shared with love 💕'
         );
-        
         if (result.error) {
           console.error('Failed to share photo:', result.error);
         }
       } else {
         // Use local URL for immediate preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          photoUrl = e.target?.result as string;
-        };
-        reader.readAsDataURL(file);
-        // Wait for reader to complete
-        await new Promise(resolve => {
+        photoUrl = await new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onload = (e) => {
-            photoUrl = e.target?.result as string;
-            resolve(photoUrl);
+            resolve(e.target?.result as string);
           };
           reader.readAsDataURL(file);
         });
       }
-
+      if (!photoUrl) throw new Error('No photo URL');
       // Add to local state for immediate UI update
       const newPhoto: Photo = {
         id: Date.now().toString(),
@@ -106,7 +96,6 @@ export default function PhotoGallery() {
         timestamp: Date.now(),
         isFavorite: false
       };
-      
       setPhotos(prev => [newPhoto, ...prev]);
       setCaption('');
       event.target.value = '';
@@ -192,29 +181,48 @@ export default function PhotoGallery() {
               />
             </div>
 
-            <label 
-              htmlFor="photo-upload"
-              className={`inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 cursor-pointer transition-all duration-200 ${
-                isUploading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {isUploading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Uploading...</span>
-                </>
-              ) : (
-                <>
-                  <Upload className="w-5 h-5" />
-                  <span>Choose Photo</span>
-                </>
-              )}
-            </label>
-            
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <label 
+                htmlFor="photo-upload"
+                className={`inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 cursor-pointer transition-all duration-200 ${
+                  isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {isUploading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-5 h-5" />
+                    <span>Choose Photo</span>
+                  </>
+                )}
+              </label>
+              <label
+                htmlFor="photo-capture"
+                className={`inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-400 to-purple-400 text-white rounded-xl hover:from-pink-500 hover:to-purple-500 cursor-pointer transition-all duration-200 ${
+                  isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                <Camera className="w-5 h-5" />
+                <span>Take Photo</span>
+              </label>
+            </div>
             <input
               id="photo-upload"
               type="file"
               accept="image/*"
+              onChange={handleFileUpload}
+              disabled={isUploading}
+              className="hidden"
+            />
+            <input
+              id="photo-capture"
+              type="file"
+              accept="image/*"
+              capture="environment"
               onChange={handleFileUpload}
               disabled={isUploading}
               className="hidden"
