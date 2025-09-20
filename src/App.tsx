@@ -236,6 +236,13 @@ function FeedPage() {
       <header className="bg-white/80 backdrop-blur-md border-b border-pink-200 sticky top-0 z-40 safe-area-top">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 text-gray-600 hover:text-pink-600 hover:bg-pink-100 rounded-xl transition-colors"
+            >
+              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+            
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl">
                 <Heart className="w-6 h-6 text-white fill-current" />
@@ -245,13 +252,6 @@ function FeedPage() {
                 <p className="text-xs text-gray-600">Long Distance Love</p>
               </div>
             </div>
-            
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 text-gray-600 hover:text-pink-600 hover:bg-pink-100 rounded-xl transition-colors"
-            >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
           </div>
         </div>
       </header>

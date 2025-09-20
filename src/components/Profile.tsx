@@ -18,7 +18,7 @@ interface ProfileProps {
 }
 
 export default function Profile({ onPairPartner }: ProfileProps) {
-  const { user, userProfile, isGuest, setGuestMode } = useAuth();
+  const { user, isGuest, setGuestMode } = useAuth();
   
   // Automatically set guest mode if no user is logged in
   useEffect(() => {
@@ -144,10 +144,9 @@ export default function Profile({ onPairPartner }: ProfileProps) {
   return (
     <div className="p-4 md:p-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Profile</h2>
-        <p className="text-gray-600 text-sm md:text-base">Manage your account and relationship</p>
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">Profile</h2>
+        <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">Manage your account and relationship</p>
       </div>
-
       <div className="max-w-2xl mx-auto space-y-6">
 
         {/* Authentication Section */}
