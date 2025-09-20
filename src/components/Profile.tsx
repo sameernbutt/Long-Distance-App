@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { User, Heart, Save, Calendar, MapPin, Users, LogIn, UserPlus, UserCheck, LogOut, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { signInWithEmail, signUpWithEmail, signInWithGoogle, signOutUser } from '../firebase/auth';
+import { getPartnerId } from '../firebase/moods';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 interface CoupleProfile {
   person1: string;
@@ -19,6 +22,8 @@ interface ProfileProps {
 
 export default function Profile({ onPairPartner }: ProfileProps) {
   const { user, isGuest, setGuestMode } = useAuth();
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [partnerProfile, setPartnerProfile] = useState<any>(null);
   
   // Automatically set guest mode if no user is logged in
   useEffect(() => {
@@ -26,6 +31,30 @@ export default function Profile({ onPairPartner }: ProfileProps) {
       setGuestMode(true);
     }
   }, [user, isGuest, setGuestMode]);
+
+  // Load partner information
+  useEffect(() => {
+    const loadPartnerInfo = async () => {
+      if (user?.uid && !isGuest) {
+        try {
+          const partnerIdResult = await getPartnerId(user.uid);
+          setPartnerId(partnerIdResult);
+          
+          if (partnerIdResult) {
+            // Get partner's profile
+            const partnerDoc = await getDoc(doc(db, 'users', partnerIdResult));
+            if (partnerDoc.exists()) {
+              setPartnerProfile(partnerDoc.data());
+            }
+          }
+        } catch (error) {
+          console.error('Error loading partner info:', error);
+        }
+      }
+    };
+
+    loadPartnerInfo();
+  }, [user, isGuest]);
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -239,32 +268,54 @@ export default function Profile({ onPairPartner }: ProfileProps) {
         {/* Partner Pairing Section */}
         <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100">
           <div className="text-center mb-4">
-            <div className="p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full w-fit mx-auto mb-3">
-              <UserPlus className="w-6 h-6 text-white" />
+            <div className={`p-3 rounded-full w-fit mx-auto mb-3 ${partnerId ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-pink-500 to-purple-500'}`}>
+              {partnerId ? <UserCheck className="w-6 h-6 text-white" /> : <UserPlus className="w-6 h-6 text-white" />}
             </div>
             <h3 className="text-lg font-bold text-gray-800 mb-2">Partner Connection</h3>
             <p className="text-sm text-gray-600">
-              {isGuest ? 'Sign in to connect with your partner' : 'Connect with your partner to share experiences'}
+              {isGuest 
+                ? 'Sign in to connect with your partner' 
+                : partnerId 
+                  ? `You're paired with ${partnerProfile?.displayName || 'your partner'}!`
+                  : 'Connect with your partner to share experiences'
+              }
             </p>
           </div>
           <div className="space-y-3">
-            <button 
-              onClick={onPairPartner}
-              disabled={isGuest}
-              className={`w-full py-2.5 px-4 rounded-lg transition-all duration-200 font-medium text-sm ${
-                isGuest 
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:from-pink-600 hover:to-purple-600'
-              }`}
-            >
-              {isGuest ? 'Sign in to pair with partner' : 'Pair with Partner'}
-            </button>
-            {profile.person2 && !isGuest && (
+            {partnerId ? (
               <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
                 <div className="flex items-center justify-center space-x-2 text-green-700">
                   <Users className="w-4 h-4" />
-                  <span className="text-sm font-medium">Connected with {profile.person2}</span>
+                  <span className="text-sm font-medium">
+                    Connected with {partnerProfile?.displayName || 'Partner'}
+                  </span>
                 </div>
+                <p className="text-xs text-green-600 mt-1">
+                  You can now share moods, daily questions, and more!
+                </p>
+              </div>
+            ) : (
+              <button 
+                onClick={onPairPartner}
+                disabled={isGuest}
+                className={`w-full py-2.5 px-4 rounded-lg transition-all duration-200 font-medium text-sm ${
+                  isGuest 
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:from-pink-600 hover:to-purple-600'
+                }`}
+              >
+                {isGuest ? 'Sign in to pair with partner' : 'Pair with Partner'}
+              </button>
+            )}
+            {profile.person2 && !isGuest && !partnerId && (
+              <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-center space-x-2 text-blue-700">
+                  <Users className="w-4 h-4" />
+                  <span className="text-sm font-medium">Profile shows: {profile.person2}</span>
+                </div>
+                <p className="text-xs text-blue-600 mt-1">
+                  Use "Pair with Partner" to connect digitally
+                </p>
               </div>
             )}
           </div>

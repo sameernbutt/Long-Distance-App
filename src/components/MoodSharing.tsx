@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Heart, Send, Check, User } from 'lucide-react';
+import { Heart, Send, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { shareMood, getPartnerMoods, subscribeToPartnerMoods, getPartnerId } from '../firebase/moods';
 
@@ -172,7 +172,10 @@ export default function MoodSharing() {
         
         if (partner) {
           // Load partner moods
-          const { moods } = await getPartnerMoods(user.uid);
+          const { moods, error } = await getPartnerMoods(user.uid);
+          if (error) {
+            console.error('Error loading partner moods:', error);
+          }
           setPartnerMoods(moods);
           
           // Subscribe to real-time partner mood updates
@@ -326,66 +329,50 @@ export default function MoodSharing() {
         </div>
       )}
 
-      {/* Partner's Recent Moods */}
-      {partnerMoods.length > 0 && (
-        <div className="mb-6">
-          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-            <User className="w-4 h-4 mr-2 text-pink-500" />
-            Partner's Recent Moods
-          </h4>
-          <div className="space-y-2">
-            {partnerMoods.slice(0, 3).map((entry) => (
-              <div
-                key={entry.id}
-                className="flex items-center space-x-3 p-3 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border border-pink-200"
-              >
-                <div className="text-2xl">{entry.emoji}</div>
+      {/* Current Moods Display */}
+      <div className="mb-6">
+        <h4 className="text-sm font-medium text-gray-700 mb-3">Current Moods</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Your Current Mood */}
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h5 className="text-xs font-medium text-blue-700 mb-2">Your Mood</h5>
+            {moodHistory.length > 0 ? (
+              <div className="flex items-center space-x-3">
+                <div className="text-2xl">{moods.find(m => m.name === moodHistory[0].mood)?.emoji || '😊'}</div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-800">{entry.message}</div>
-                  <div className="text-xs text-gray-500">{formatTime(entry.timestamp)}</div>
+                  <div className="text-sm font-medium text-gray-800">{moodHistory[0].message}</div>
+                  <div className="text-xs text-gray-500">{formatTime(moodHistory[0].timestamp)}</div>
                 </div>
               </div>
-            ))}
+            ) : (
+              <div className="text-center py-2">
+                <div className="text-sm text-gray-500">Share your mood to get started!</div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
 
-      {/* Your Recent Moods */}
-      {moodHistory.length > 0 && (
-        <div className="mb-6">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Your Recent Moods</h4>
-          <div className="space-y-2">
-            {moodHistory.slice(0, 3).map((entry) => {
-              const mood = moods.find(m => m.name === entry.mood);
-              return (
-                <div
-                  key={entry.id}
-                  className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="text-2xl">{mood?.emoji || '😊'}</div>
+          {/* Partner's Current Mood */}
+          <div className="p-4 bg-pink-50 rounded-lg border border-pink-200">
+            <h5 className="text-xs font-medium text-pink-700 mb-2">Partner's Mood</h5>
+            {partnerId ? (
+              partnerMoods.length > 0 ? (
+                <div className="flex items-center space-x-3">
+                  <div className="text-2xl">{partnerMoods[0].emoji}</div>
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-800">{entry.message}</div>
-                    <div className="text-xs text-gray-500">{formatTime(entry.timestamp)}</div>
+                    <div className="text-sm font-medium text-gray-800">{partnerMoods[0].message}</div>
+                    <div className="text-xs text-gray-500">{formatTime(partnerMoods[0].timestamp)}</div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Partner Status */}
-      <div className="mt-6 p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border border-pink-200">
-        <div className="text-center">
-          <div className="text-sm text-gray-600 mb-1">Partner Status</div>
-          <div className="text-lg font-semibold text-gray-800">
-            {partnerId ? 'Connected' : 'Not Paired'}
-          </div>
-          <div className="text-xs text-gray-500 mt-1">
-            {partnerId 
-              ? 'You can share moods with your partner!'
-              : 'Pair with your partner to share moods together'
-            }
+              ) : (
+                <div className="text-center py-2">
+                  <div className="text-sm text-gray-500">No mood shared yet</div>
+                </div>
+              )
+            ) : (
+              <div className="text-center py-2">
+                <div className="text-sm text-gray-500">Not paired with partner</div>
+              </div>
+            )}
           </div>
         </div>
       </div>

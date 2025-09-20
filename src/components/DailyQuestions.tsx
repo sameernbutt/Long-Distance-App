@@ -1,76 +1,72 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw, Heart, MessageCircle } from 'lucide-react';
+import { Heart, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPartnerId } from '../firebase/moods';
-import { saveDailyAnswer, getCoupleAnswers } from '../firebase/dailyQuestions';
-
-const questions = [
-  "What's one thing that made you smile today?",
-  "If you could have dinner with anyone in the world, who would it be and why?",
-  "What's your favorite memory of us together?",
-  "What are you most looking forward to in our future?",
-  "What's something new you'd like to try together?",
-  "What song reminds you of me?",
-  "What's the best advice you've ever received?",
-  "If we could go anywhere in the world right now, where would you want to go?",
-  "What's something you've always wanted to learn?",
-  "What made you fall in love with me?",
-  "What's your biggest dream?",
-  "What's something you're grateful for today?",
-  "If you could relive any day with me, which would it be?",
-  "What's your favorite thing about our relationship?",
-  "What's something that always makes you laugh?",
-  "What's your love language and how do you like to receive love?",
-  "What's a goal you want to achieve this year?",
-  "What's your favorite way to spend a lazy day?",
-  "What's something you admire about me?",
-  "What's your favorite season and why?",
-];
+import { saveDailyAnswer, getCoupleAnswers, getTodaysDailyQuestion } from '../firebase/dailyQuestions';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 export default function DailyQuestions() {
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [coupleAnswers, setCoupleAnswers] = useState<{ [uid: string]: { answer: string, name: string } }>({});
-  // const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { user, userProfile } = useAuth();
   const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [partnerProfile, setPartnerProfile] = useState<any>(null);
 
   useEffect(() => {
     if (!user) return;
-    getPartnerId(user.uid).then(pid => setPartnerId(pid));
-    const today = new Date().toDateString();
-    const savedQuestion = localStorage.getItem('dailyQuestion');
-    const savedDate = localStorage.getItem('questionDate');
-    if (savedDate === today && savedQuestion) {
-      setCurrentQuestion(savedQuestion);
-    } else {
-      generateNewQuestion();
-    }
+    
+    const loadData = async () => {
+      const pid = await getPartnerId(user.uid);
+      setPartnerId(pid);
+      
+      if (pid) {
+        // Load partner profile
+        const partnerDoc = await getDoc(doc(db, 'users', pid));
+        if (partnerDoc.exists()) {
+          setPartnerProfile(partnerDoc.data());
+        }
+      }
+    };
+    
+    loadData();
+    
+    // Load today's global question
+    const loadTodaysQuestion = async () => {
+      setLoading(true);
+      try {
+        const todaysQuestion = await getTodaysDailyQuestion();
+        setCurrentQuestion(todaysQuestion);
+      } catch (error) {
+        console.error('Error loading daily question:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTodaysQuestion();
   }, [user]);
 
   useEffect(() => {
     if (!user || !partnerId || !currentQuestion) return;
-  // setLoading(true);
+    setLoading(true);
     const today = new Date().toDateString();
     getCoupleAnswers(user.uid, partnerId, today).then((answers) => {
       const ansObj: { [uid: string]: { answer: string, name: string } } = {};
       answers.forEach(a => {
-        ansObj[a.userId] = { answer: a.answer, name: a.userId === user.uid ? (userProfile?.displayName || 'You') : 'Partner' };
+        if (a.userId === user.uid) {
+          ansObj[a.userId] = { answer: a.answer, name: userProfile?.displayName || 'You' };
+        } else {
+          ansObj[a.userId] = { answer: a.answer, name: partnerProfile?.displayName || 'Partner' };
+        }
       });
       setCoupleAnswers(ansObj);
       setAnswer(ansObj[user.uid]?.answer || '');
-  // setLoading(false);
+      setLoading(false);
     });
-  }, [user, partnerId, currentQuestion, userProfile]);
-
-  const generateNewQuestion = () => {
-    const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-    setCurrentQuestion(randomQuestion);
-  setAnswer('');
-    
-    localStorage.setItem('dailyQuestion', randomQuestion);
-    localStorage.setItem('questionDate', new Date().toDateString());
-  };
+  }, [user, partnerId, currentQuestion, userProfile, partnerProfile]);
 
   const saveAnswer = async () => {
     if (!user) return;
@@ -81,7 +77,11 @@ export default function DailyQuestions() {
       const answers = await getCoupleAnswers(user.uid, partnerId, today);
       const ansObj: { [uid: string]: { answer: string, name: string } } = {};
       answers.forEach(a => {
-        ansObj[a.userId] = { answer: a.answer, name: a.userId === user.uid ? (userProfile?.displayName || 'You') : 'Partner' };
+        if (a.userId === user.uid) {
+          ansObj[a.userId] = { answer: a.answer, name: userProfile?.displayName || 'You' };
+        } else {
+          ansObj[a.userId] = { answer: a.answer, name: partnerProfile?.displayName || 'Partner' };
+        }
       });
       setCoupleAnswers(ansObj);
     }
@@ -102,17 +102,11 @@ export default function DailyQuestions() {
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-gray-800 mb-2">Today's Question</h3>
-              <p className="text-base md:text-lg text-gray-700 leading-relaxed">{currentQuestion}</p>
+              <p className="text-base md:text-lg text-gray-700 leading-relaxed">
+                {loading ? 'Loading today\'s question...' : currentQuestion}
+              </p>
             </div>
           </div>
-          
-          <button
-            onClick={generateNewQuestion}
-            className="flex items-center space-x-2 text-pink-600 hover:text-pink-700 transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span className="text-sm">Get new question</span>
-          </button>
         </div>
 
         <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100">

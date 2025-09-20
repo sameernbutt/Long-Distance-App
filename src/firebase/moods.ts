@@ -89,8 +89,8 @@ export const getMoodHistory = async (userId: string, limitCount: number = 10) =>
   }
 };
 
-// Get partner's recent moods
-export const getPartnerMoods = async (userId: string, limitCount: number = 5) => {
+// Get partner's current mood (most recent)
+export const getPartnerMoods = async (userId: string, limitCount: number = 1) => {
   try {
     const moodsRef = collection(db, 'moods');
     const q = query(
@@ -114,7 +114,7 @@ export const getPartnerMoods = async (userId: string, limitCount: number = 5) =>
   }
 };
 
-// Real-time listener for partner moods
+// Real-time listener for partner's current mood
 export const subscribeToPartnerMoods = (
   userId: string, 
   callback: (moods: MoodEntry[]) => void
@@ -125,7 +125,7 @@ export const subscribeToPartnerMoods = (
     where('userId', '==', userId),
     where('isFromPartner', '==', true),
     orderBy('timestamp', 'desc'),
-    limit(5)
+    limit(1)
   );
   
   return onSnapshot(q, (querySnapshot) => {
