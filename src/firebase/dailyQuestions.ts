@@ -35,6 +35,16 @@ const questions = [
   "What's your favorite way to spend a lazy day?",
   "What's something you admire about me?",
   "What's your favorite season and why?",
+  "What's a childhood memory that still makes you happy?",
+  "What's your idea of a perfect date night?",
+  "What's something you're proud of accomplishing recently?",
+  "What's a book, movie, or show you think I'd enjoy?",
+  "What's your favorite way to show affection?",
+  "What's something you've learned about yourself this year?",
+  "What's a tradition you'd like us to start?",
+  "What's your favorite thing about the place where you grew up?",
+  "What's something that always comforts you when you're feeling down?",
+  "What's a quality you hope our relationship always has?",
 ];
 
 // Get today's global daily question (same for all users)

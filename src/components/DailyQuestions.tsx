@@ -51,21 +51,30 @@ export default function DailyQuestions() {
 
   useEffect(() => {
     if (!user || !partnerId || !currentQuestion) return;
-    setLoading(true);
-    const today = new Date().toDateString();
-    getCoupleAnswers(user.uid, partnerId, today).then((answers) => {
-      const ansObj: { [uid: string]: { answer: string, name: string } } = {};
-      answers.forEach(a => {
-        if (a.userId === user.uid) {
-          ansObj[a.userId] = { answer: a.answer, name: userProfile?.displayName || 'You' };
-        } else {
-          ansObj[a.userId] = { answer: a.answer, name: partnerProfile?.displayName || 'Partner' };
-        }
-      });
-      setCoupleAnswers(ansObj);
-      setAnswer(ansObj[user.uid]?.answer || '');
-      setLoading(false);
-    });
+    
+    const loadAnswers = async () => {
+      try {
+        setLoading(true);
+        const today = new Date().toDateString();
+        const answers = await getCoupleAnswers(user.uid, partnerId, today);
+        const ansObj: { [uid: string]: { answer: string, name: string } } = {};
+        answers.forEach(a => {
+          if (a.userId === user.uid) {
+            ansObj[a.userId] = { answer: a.answer, name: userProfile?.displayName || 'You' };
+          } else {
+            ansObj[a.userId] = { answer: a.answer, name: partnerProfile?.displayName || 'Partner' };
+          }
+        });
+        setCoupleAnswers(ansObj);
+        setAnswer(ansObj[user.uid]?.answer || '');
+      } catch (error) {
+        console.error('Error loading answers:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAnswers();
   }, [user, partnerId, currentQuestion, userProfile, partnerProfile]);
 
   const saveAnswer = async () => {

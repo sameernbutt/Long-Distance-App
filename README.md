@@ -3,7 +3,40 @@
 Click here to view deployed project: https://long-distance-app-three.vercel.app
 
 ## 🎯 Project Overview
-A comprehensive mobile-first Progressive Web App (PWA) for long-distance couples to stay connected across the miles. Built with React, TypeScript, Vite, and Firebase, featuring real-time mood sharing, synchronized daily questions, partner pairing, and interactive date planning.
+A comprehensive mobile-first Progr## 📁 File Structure
+### 🔧 Configuration Files
+- **package.json**  
+  - Project name: "together-apart"  
+  - Version: "1.0.0"  
+  - PWA metadata and keywords  
+  - Optimized dependencies for mobile  
+- **vite.config.ts**  
+  - Mobile-optimized build settings  
+  - Bundle splitting for performance  
+  - Development server configuration  
+- **manifest.json**  
+  - PWA configuration  
+  - App icons and screenshots  
+  - Mobile app metadata  
+
+### 🔥 Firebase Services Structure
+- **src/firebase/config.ts**: Firebase configuration and initialization
+- **src/firebase/auth.ts**: Authentication services and user management
+- **src/firebase/partners.ts**: Partner pairing and connection management
+- **src/firebase/moods.ts**: Real-time mood sharing functionality
+- **src/firebase/feed.ts**: Shared content (photos, videos, music) management
+- **src/firebase/dailyQuestions.ts**: Global synchronized daily questions system
+- **src/firebase/profile.ts**: User profiles, anniversaries, and account management
+- **src/firebase/reunion.ts**: Synchronized reunion countdown management
+- **firestore-rules-fixed.txt**: Comprehensive Firestore security rules
+
+### 🧩 Component Architecture
+- **src/components/Profile.tsx**: Complete redesign with anniversary and account management
+- **src/components/Countdown.tsx**: Enhanced reunion system with Firebase sync
+- **src/components/MoodSharing.tsx**: Current mood display with real-time updates
+- **src/components/DailyQuestions.tsx**: Global question system with partner answers
+- **src/components/PhotoGallery.tsx**: Improved upload performance with timeout protection
+- **src/contexts/AuthContext.tsx**: Enhanced user profile management with location field(PWA) for long-distance couples to stay connected across the miles. Built with React, TypeScript, Vite, and Firebase, featuring real-time mood sharing, synchronized daily questions, partner pairing, and interactive date planning.
 
 ## ✨ Recent Major Updates & Improvements
 
@@ -45,6 +78,69 @@ A comprehensive mobile-first Progressive Web App (PWA) for long-distance couples
 - **Global Collections**: Added rules for `globalDailyQuestions` collection
 - **Partner Permissions**: Fine-tuned permissions for reading and writing shared content
 
+## 🚀 Latest Features (September 2025)
+
+### 👤 Redesigned Profile System
+- **Simplified Profile Display**: Clean interface showing only essential information (name and location)
+- **Edit-in-Place**: Dedicated edit buttons for name and location with inline editing
+- **Anniversary Management**: Shared anniversary date between partners with automatic relationship duration calculation
+- **Duration Display**: Shows years, months, and days together in natural language format
+- **Partner-Only Setting**: Anniversary can only be set when paired with a partner
+- **Real-time Sync**: Anniversary changes sync instantly between both partners
+
+### 🗑️ Account Management
+- **Delete Account Feature**: Added secure account deletion with confirmation dialog
+- **Two-Step Confirmation**: Prevents accidental account deletion with warning modal
+- **Complete Removal**: Removes data from both Firestore and Firebase Authentication
+- **Graceful Error Handling**: Proper error messages and fallback behavior
+
+### 🏠 Smart Reunion Countdown
+- **Dynamic Display**: Shows reunion information only when set, hides form by default
+- **Set Reunion Button**: Clean "Set Reunion" button appears when no reunion is configured
+- **Comprehensive Display**: Shows date, location, and live countdown when reunion is set
+- **Edit in Place**: Small edit button allows modification of existing reunion details
+- **Partner Synchronization**: Reunion data syncs in real-time between both partners
+- **Firebase Backend**: Uses dedicated `coupleReunions` collection for data persistence
+
+### 🔧 Performance & Bug Fixes
+- **Daily Questions Loading**: Fixed stuck loading state with proper async error handling
+- **Photo Upload Performance**: Added 30-second timeout protection and better error messages
+- **Camera UI Freeze**: Fixed UI freeze when cancelling camera capture by immediate input reset
+- **Loading State Management**: Improved loading indicators with proper cleanup in finally blocks
+
+### 🏗️ Enhanced Firebase Architecture
+**New Collections:**
+- `coupleAnniversaries`: Stores shared anniversary dates between partners
+- `coupleReunions`: Manages synchronized reunion countdown data
+- Enhanced `users` collection with location field
+
+**Real-time Features:**
+- Anniversary data with live sync between partners
+- Reunion countdowns with instant updates
+- Relationship duration calculation with automatic refresh
+
+**Security Rules:**
+```javascript
+// Couple anniversaries & reunions - readable/writable by both partners
+match /coupleAnniversaries/{coupleId} {
+  allow read, write: if request.auth != null && 
+    (coupleId.split('_')[0] == request.auth.uid || 
+     coupleId.split('_')[1] == request.auth.uid);
+}
+
+match /coupleReunions/{coupleId} {
+  allow read, write: if request.auth != null && 
+    (coupleId.split('_')[0] == request.auth.uid || 
+     coupleId.split('_')[1] == request.auth.uid);
+}
+```
+
+### 🔄 State Management Improvements
+- **Loading States**: Proper loading indicators for all async operations
+- **Error Boundaries**: Comprehensive error handling with user-friendly messages
+- **Optimistic Updates**: Immediate UI feedback with backend sync
+- **Real-time Subscriptions**: Live data updates using Firestore listeners
+
 ## 📱 Application Structure
 ### Navigation (5 Bottom Tabs)
 - **Activities** - Games and relationship questions  
@@ -66,8 +162,17 @@ A comprehensive mobile-first Progressive Web App (PWA) for long-distance couples
 
 ### Backend & Database
 - Firebase 10.12.4 for authentication and real-time database  
-- Firestore for data persistence  
+- Firestore for data persistence with enhanced collections:
+  - `users`: User profiles with location data
+  - `partnerConnections`: Secure partner pairing system
+  - `moods`: Real-time mood sharing
+  - `feed`: Shared photos, videos, and music
+  - `dailyAnswers`: User responses to daily questions
+  - `globalDailyQuestions`: Synchronized daily questions
+  - `coupleAnniversaries`: Shared anniversary dates with duration tracking
+  - `coupleReunions`: Synchronized reunion countdowns
 - Firebase Storage for file uploads (10MB limit)  
+- Real-time listeners for live data synchronization
 - localStorage for non-critical client-side data  
 
 ### Authentication
@@ -190,6 +295,62 @@ A comprehensive mobile-first Progressive Web App (PWA) for long-distance couples
 - Set up Cloud Storage bucket  
 - Configure file upload rules  
 - Set 10MB size limits  
+
+### Firestore Collections & Data Models
+**Core User Data:**
+```typescript
+// users/{userId}
+{
+  uid: string,
+  email: string,
+  displayName: string,
+  location?: string,
+  photoURL?: string,
+  partnerId?: string,
+  partnerCode?: string
+}
+```
+
+**Relationship Data:**
+```typescript
+// coupleAnniversaries/{coupleId}
+{
+  coupleId: string,        // "user1_user2" (sorted)
+  anniversaryDate: string, // "2024-01-15"
+  setBy: string,          // userId who set it
+  createdAt: number,
+  updatedAt: number
+}
+
+// coupleReunions/{coupleId}  
+{
+  coupleId: string,
+  date: string,           // "2025-12-25T18:00"
+  title: string,          // "Christmas Together"
+  location: string,       // "Paris"
+  setBy: string,
+  createdAt: number,
+  updatedAt: number
+}
+```
+
+**Activity Data:**
+```typescript
+// globalDailyQuestions/{date}
+{
+  question: string,
+  date: string,           // "Mon Sep 20 2025"
+  questionIndex: number
+}
+
+// dailyAnswers/{userId_date}
+{
+  userId: string,
+  question: string,
+  answer: string,
+  date: string
+}
+```  
 
 ## 📱 PWA Features
 ### Installation

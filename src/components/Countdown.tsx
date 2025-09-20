@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Heart, MapPin, Edit } from 'lucide-react';
+import { Calendar, Clock, Heart, MapPin, Edit, Plus } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { getPartnerId } from '../firebase/moods';
+import { getCoupleReunion, setCoupleReunion, subscribeToReunionChanges, ReunionData } from '../firebase/reunion';
 
 interface CountdownData {
   date: string;
@@ -8,13 +11,12 @@ interface CountdownData {
 }
 
 export default function Countdown() {
-  const [countdownData, setCountdownData] = useState<CountdownData>(() => {
-    const saved = localStorage.getItem('countdownData');
-    return saved ? JSON.parse(saved) : {
-      date: '',
-      title: 'Next Meeting',
-      location: ''
-    };
+  const { user, isGuest } = useAuth();
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [countdownData, setCountdownData] = useState<CountdownData>({
+    date: '',
+    title: 'Next Meeting',
+    location: ''
   });
   
   const [timeLeft, setTimeLeft] = useState({
@@ -24,8 +26,60 @@ export default function Countdown() {
     seconds: 0
   });
   
-  const [isEditing, setIsEditing] = useState(!countdownData.date);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showSetReunion, setShowSetReunion] = useState(false);
   const [editData, setEditData] = useState(countdownData);
+  const [loading, setLoading] = useState(true);
+
+  // Load partner ID
+  useEffect(() => {
+    const loadPartner = async () => {
+      if (user?.uid && !isGuest) {
+        try {
+          const pId = await getPartnerId(user.uid);
+          setPartnerId(pId);
+        } catch (error) {
+          console.error('Error loading partner:', error);
+        }
+      }
+      setLoading(false);
+    };
+
+    loadPartner();
+  }, [user?.uid, isGuest]);
+
+  // Load and subscribe to reunion data
+  useEffect(() => {
+    if (!user?.uid || !partnerId || isGuest) {
+      setLoading(false);
+      return;
+    }
+
+    // Subscribe to real-time updates
+    const unsubscribe = subscribeToReunionChanges(user.uid, partnerId, (reunion: ReunionData | null) => {
+      if (reunion) {
+        setCountdownData({
+          date: reunion.date,
+          title: reunion.title,
+          location: reunion.location
+        });
+        setEditData({
+          date: reunion.date,
+          title: reunion.title,
+          location: reunion.location
+        });
+      } else {
+        setCountdownData({
+          date: '',
+          title: 'Next Meeting',
+          location: ''
+        });
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user?.uid, partnerId, isGuest]);
 
   useEffect(() => {
     if (!countdownData.date) return;
@@ -50,12 +104,42 @@ export default function Countdown() {
     return () => clearInterval(timer);
   }, [countdownData.date]);
 
-  const saveCountdown = () => {
-    if (!editData.date) return;
+  const saveCountdown = async () => {
+    if (!editData.date || !user?.uid || !partnerId) return;
     
-    setCountdownData(editData);
-    localStorage.setItem('countdownData', JSON.stringify(editData));
-    setIsEditing(false);
+    try {
+      const result = await setCoupleReunion(user.uid, partnerId, {
+        date: editData.date,
+        title: editData.title || 'Next Meeting',
+        location: editData.location
+      });
+      
+      if (result.success) {
+        setIsEditing(false);
+        setShowSetReunion(false);
+      } else {
+        alert('Failed to save reunion. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error saving reunion:', error);
+      alert('Failed to save reunion. Please try again.');
+    }
+  };
+
+  const handleSetReunion = () => {
+    setEditData({
+      date: '',
+      title: 'Next Meeting',
+      location: ''
+    });
+    setShowSetReunion(true);
+    setIsEditing(true);
+  };
+
+  const handleEdit = () => {
+    setEditData(countdownData);
+    setIsEditing(true);
+    setShowSetReunion(false);
   };
 
   const formatDate = (dateString: string) => {
@@ -77,8 +161,37 @@ export default function Countdown() {
       </div>
 
       <div className="max-w-2xl mx-auto">
-        {/* Edit Form */}
-        {isEditing ? (
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto"></div>
+            <p className="text-gray-600 mt-2">Loading reunion data...</p>
+          </div>
+        ) : isGuest ? (
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+            <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Sign In to Set Reunions</h3>
+            <p className="text-gray-600">Create an account to set and share countdown timers with your partner</p>
+          </div>
+        ) : !partnerId ? (
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+            <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Connect with Partner</h3>
+            <p className="text-gray-600">Pair with your partner to set and share reunion countdowns together</p>
+          </div>
+        ) : !countdownData.date && !isEditing ? (
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+            <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">No Reunion Set</h3>
+            <p className="text-gray-600 mb-4">Set your next reunion to start the countdown</p>
+            <button
+              onClick={handleSetReunion}
+              className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 transition-all duration-200 font-medium"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Set Reunion</span>
+            </button>
+          </div>
+        ) : isEditing ? (
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 mb-8">
             <h3 className="text-xl font-bold text-gray-800 mb-6">Set Your Reunion</h3>
             
@@ -128,11 +241,15 @@ export default function Countdown() {
                 disabled={!editData.date}
                 className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
               >
-                Save Countdown
+                {showSetReunion ? 'Set Reunion' : 'Save Changes'}
               </button>
-              {countdownData.date && (
+              {(countdownData.date || !showSetReunion) && (
                 <button
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => {
+                    setIsEditing(false);
+                    setShowSetReunion(false);
+                    setEditData(countdownData);
+                  }}
                   className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
                 >
                   Cancel
@@ -149,7 +266,7 @@ export default function Countdown() {
                 <div className="flex items-center justify-between mb-4">
                   <div></div>
                   <button
-                    onClick={() => setIsEditing(true)}
+                    onClick={handleEdit}
                     className="p-2 text-gray-500 hover:text-pink-600 hover:bg-pink-100 rounded-full transition-colors"
                   >
                     <Edit className="w-5 h-5" />
