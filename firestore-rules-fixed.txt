@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read/write their own profile
+    // Also allow reading for partner connections and allow partners to update partnerId
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Allow partners to update each other's partnerId field
+      allow update: if request.auth != null && 
+        ('partnerId' in request.resource.data) &&
+        (request.resource.data.keys().hasOnly(['partnerId']) || 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['partnerId']));
+    }
+    
+    // Partner connections rules
+    match /partnerConnections/{connectionId} {
+      // Allow creating new connections
+      allow create: if request.auth != null && request.resource.data.partner1Id == request.auth.uid;
+      
+      // Allow reading connections you're part of OR connections with matching code for joining
+      allow read: if request.auth != null && (
+        (resource.data.partner1Id == request.auth.uid || 
+         resource.data.partner2Id == request.auth.uid) ||
+        // Allow reading for queries with partnerCode (needed for joining)
+        resource.data.status == 'pending'
+      );
+      
+      // Allow updating connections you're part of
+      allow update: if request.auth != null && 
+        (resource.data.partner1Id == request.auth.uid || 
+         resource.data.partner2Id == request.auth.uid ||
+         // Allow joining - updating with your partner2Id
+         (resource.data.status == 'pending' && request.resource.data.partner2Id == request.auth.uid));
+    }
+    
+    // Feed items - users can read their own and partner's items
+    match /feed/{itemId} {
+      allow read: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || 
+         request.auth.uid in resource.data.likes);
+      allow write: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || 
+         request.auth.uid == request.resource.data.userId);
+    }
+    
+    // Moods - users can read/write their own moods
+    match /moods/{moodId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // Daily answers - users can read/write their own answers
+    match /dailyAnswers/{answerId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // Global daily questions - everyone can read, system manages writes
+    match /globalDailyQuestions/{questionDate} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null; // Users can create today's question if it doesn't exist
+    }
+    
+    // Custom dates - users can read their own and partner's dates
+    match /customDates/{dateId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || 
+         request.auth.uid == request.resource.data.userId);
+    }
+    
+    // Bucket list - users can read their own and partner's items
+    match /bucketList/{itemId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || 
+         request.auth.uid == request.resource.data.userId);
+    }
+  }
+}

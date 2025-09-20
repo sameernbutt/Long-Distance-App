@@ -3,7 +3,47 @@
 Click here to view deployed project: https://long-distance-app-three.vercel.app
 
 ## 🎯 Project Overview
-A comprehensive mobile-first Progressive Web App (PWA) for long-distance couples to stay connected across the miles. Built with React, TypeScript, Vite, and Firebase, featuring real-time sharing, partner pairing, and interactive date planning.
+A comprehensive mobile-first Progressive Web App (PWA) for long-distance couples to stay connected across the miles. Built with React, TypeScript, Vite, and Firebase, featuring real-time mood sharing, synchronized daily questions, partner pairing, and interactive date planning.
+
+## ✨ Recent Major Updates & Improvements
+
+### 🎭 Enhanced Mood Sharing System
+- **Current Mood Display**: Redesigned mood sharing to show only the most recent mood from each partner, creating a "current mood status" view
+- **Side-by-Side Layout**: User and partner moods displayed in color-coded cards (blue for user, pink for partner)
+- **Real-Time Updates**: Live mood synchronization between partners
+- **Partner Status Integration**: Moods now display with actual partner names instead of generic labels
+
+### 💑 Relationship Status Header
+- **Dynamic Home Header**: Top of home page now shows relationship status
+- **Paired Status**: When connected, displays "[User Name] & [Partner Name] ❤️"
+- **Pairing Prompt**: When not paired, shows "Pair with your partner to unlock more features"
+- **Visual Feedback**: Clear distinction between paired and unpaired states
+
+### 📝 Global Daily Questions System
+- **Synchronized Questions**: All users now receive the same daily question, ensuring couples answer the same prompt
+- **Deterministic Algorithm**: Questions rotate daily based on date, not random generation
+- **Enhanced Answer Display**: Both user and partner answers shown with real names
+- **Firebase Integration**: Global daily questions stored in Firestore for consistency
+- **Removed Randomization**: No more "get new question" button - users must answer the assigned daily question
+
+### 👥 Smart Profile Pairing
+- **Dynamic Pairing Section**: Profile automatically adapts based on connection status
+- **When Paired**: Shows green success state with partner name and "Connected with [Partner Name]"
+- **When Not Paired**: Shows pink "Pair with Partner" button
+- **Visual Status Indicators**: Green checkmark when paired, pink plus icon when not paired
+- **Enhanced Context**: Clear messaging about what pairing unlocks
+
+### 🔧 UI/UX Improvements
+- **Hamburger Menu Repositioning**: Moved from right to left side for better accessibility
+- **Theme Toggle Removed**: Streamlined Profile page by removing unused theme settings
+- **Better Loading States**: Improved loading indicators and error handling
+- **Partner Name Resolution**: Real partner names displayed throughout the app instead of generic "Partner" labels
+
+### 🛡️ Firebase Security & Rules Updates
+- **Enhanced Firestore Rules**: Comprehensive security rules for partner pairing, mood sharing, and daily questions
+- **Cross-User Updates**: Secure permission model allowing partners to update each other's profiles during pairing
+- **Global Collections**: Added rules for `globalDailyQuestions` collection
+- **Partner Permissions**: Fine-tuned permissions for reading and writing shared content
 
 ## 📱 Application Structure
 ### Navigation (5 Bottom Tabs)
@@ -42,14 +82,37 @@ A comprehensive mobile-first Progressive Web App (PWA) for long-distance couples
 - Partner pairing with unique codes  
 - Real-time partner status updates  
 
-### 2. Shared Feed System
+### 2. Advanced Mood Sharing System
+- **Current Mood Status**: Real-time mood sharing between partners with visual indicators
+- **Side-by-Side Display**: User and partner moods shown in color-coded cards
+- **Synchronized Experience**: Both partners see each other's current mood on the home page
+- **Partner Name Integration**: Displays actual partner names instead of generic labels
+- **Visual Design**: Blue theme for user mood, pink theme for partner mood
+
+### 3. Global Daily Questions System  
+- **Synchronized Questions**: All app users receive the same daily question, ensuring couples answer together
+- **Deterministic Algorithm**: Questions rotate daily based on date for consistency
+- **Partner Answer Viewing**: See both your answer and your partner's answer side-by-side
+- **Enhanced Display**: Real partner names shown with answers
+- **No Random Questions**: Users must answer the assigned daily question (no more random generation)
+- **Firebase Integration**: Global daily questions stored in Firestore for reliability
+
+### 4. Smart Partner Pairing System
+- **Dynamic Profile Section**: Profile automatically adapts based on pairing status
+- **Visual Status Indicators**: Green checkmark when paired, pink plus icon when not paired
+- **Smart Button Behavior**: "Pair with Partner" button only shows when not paired
+- **Partnership Display**: When paired, shows "Connected with [Partner Name]" with success styling
+- **Relationship Status Header**: Home page displays "[User] & [Partner] ❤️" when paired
+- **Pairing Prompts**: Clear messaging about unlocking features when not paired
+
+### 5. Enhanced Shared Feed System
 - Photo sharing with 10MB size limit  
 - Video sharing with preview and upload  
 - Music sharing with Spotify/YouTube links  
 - Real-time updates between partners  
 - File validation and error handling  
 
-### 3. Date Planning & Management
+### 6. Date Planning & Management
 - 50+ curated date ideas across 10 categories  
 - Difficulty levels (Easy/Medium/Hard)  
 - Favorites system with local storage  
@@ -58,13 +121,11 @@ A comprehensive mobile-first Progressive Web App (PWA) for long-distance couples
 - Edit modal for modifying date details  
 - Shared likes between partners  
 
-### 4. Interactive Activities
-- Daily questions for relationship building  
+### 7. Interactive Activities & Support
+- Global synchronized daily questions for relationship building  
 - Countdown timer to next visit  
 - Games section (placeholder for future expansion)  
 - Profile management with couple names  
-
-### 5. Help & Support
 - Help page with FAQ and support information  
 - Feedback page for user input  
 - Contact information and troubleshooting  
@@ -97,7 +158,10 @@ A comprehensive mobile-first Progressive Web App (PWA) for long-distance couples
 - Gradient backgrounds (pink to purple theme)  
 - Card-based layout with shadows  
 - Consistent spacing and typography  
-- Dark mode support (basic implementation)  
+- **Improved Navigation**: Hamburger menu moved to left side for better accessibility
+- **Current Mood Cards**: Color-coded mood display (blue for user, pink for partner)
+- **Smart Status Indicators**: Visual feedback for pairing status and relationship state
+- **Relationship Headers**: Prominent display of couple names when paired
 - Loading states and error handling  
 
 ## 🚀 How to Run
@@ -117,9 +181,10 @@ A comprehensive mobile-first Progressive Web App (PWA) for long-distance couples
 - Set up authorized domains  
 
 ### Firestore Database
-- Create collections: users, partners, feed, dates  
-- Set up security rules for partner access  
-- Configure real-time listeners  
+- Create collections: users, partnerConnections, moods, feed, dailyAnswers, globalDailyQuestions
+- **Enhanced Security Rules**: Comprehensive rules for partner pairing and cross-user updates
+- **Partner Permissions**: Fine-tuned access control for shared content
+- Configure real-time listeners for mood sharing and daily questions  
 
 ### Storage
 - Set up Cloud Storage bucket  
@@ -141,21 +206,28 @@ A comprehensive mobile-first Progressive Web App (PWA) for long-distance couples
 
 ## 🎯 Current Status
 ### ✅ Completed Features
-- Complete authentication system  
-- Partner pairing functionality  
-- Shared feed with file uploads  
-- Date ideas with 3-dots menu  
-- Help and feedback pages  
-- Mobile-optimized UI/UX  
-- PWA configuration  
+- **Complete authentication system** with email/password and Google OAuth
+- **Advanced partner pairing** with unique codes and real-time status updates
+- **Current mood sharing system** with side-by-side partner mood display
+- **Global daily questions** ensuring all couples get the same question daily
+- **Smart profile management** with dynamic pairing status display
+- **Relationship status headers** showing couple names when paired
+- **Enhanced shared feed** with photo/video/music sharing
+- **Date ideas system** with 3-dots menu and favorites
+- **Help and feedback pages** with comprehensive user support
+- **Mobile-optimized UI/UX** with improved navigation and visual indicators
+- **PWA configuration** for app-like mobile experience
+- **Comprehensive Firebase security rules** for all shared content  
 
 ### 🔮 Future Enhancements
-- Real-time notifications  
+- Real-time notifications for mood changes and daily questions
+- Dark mode implementation across all components  
+- Advanced games and interactive activities
 - Video calling integration  
-- Advanced games  
-- Calendar synchronization  
-- Push notifications  
-- Offline data sync  
+- Calendar synchronization for date planning
+- Push notifications for partner activities
+- Offline data sync and caching
+- Advanced analytics for relationship insights  
 
 ## 🐛 Known Issues & Solutions
 ### Build Warnings
@@ -176,19 +248,34 @@ A comprehensive mobile-first Progressive Web App (PWA) for long-distance couples
 
 ## 🚧 Recent Progress & Technology Highlights
 
-### Latest Updates
-- **Pairing Functionality Added:** Users can now pair with their partners using unique codes, enhancing the connection experience for long-distance couples.
-- **Mood Sharing:** Partners can share their moods in real-time, fostering better communication and emotional support.
-- **Expanded Feed Features:** The shared feed now supports richer content, allowing couples to share photos, videos, and music seamlessly.
-- Note that these have not been tested yet.
+### Latest Major Updates (September 2025)
+- **🎭 Current Mood System**: Redesigned mood sharing with side-by-side partner mood display and real-time synchronization
+- **📝 Global Daily Questions**: Implemented synchronized daily questions ensuring all couples answer the same prompt each day
+- **💑 Smart Pairing Interface**: Enhanced profile section with dynamic pairing status and visual indicators
+- **🏠 Relationship Status Header**: Added prominent couple name display on home page when paired
+- **🔧 UI/UX Improvements**: Repositioned navigation elements and improved visual hierarchy
+- **🛡️ Enhanced Security**: Comprehensive Firebase security rules for partner interactions and shared content
+- **📱 Mobile Optimization**: Improved touch interactions and responsive design elements
 
-### Firebase Authentication
-This app leverages **Firebase** for secure and scalable user authentication. Both email/password and Google OAuth are supported, ensuring a smooth and reliable login experience. Firebase also powers the real-time database and storage solutions for all shared content.
+### Previous Updates
+- **Partner Pairing System**: Users can now pair with their partners using unique codes, enhancing the connection experience for long-distance couples.
+- **Real-time Mood Sharing**: Partners can share their current moods in real-time, fostering better communication and emotional support.
+- **Enhanced Feed Features**: The shared feed now supports richer content, allowing couples to share photos, videos, and music seamlessly.
+
+### Firebase Authentication & Real-time Features
+This app leverages **Firebase** for secure and scalable user authentication, real-time mood sharing, and synchronized daily questions. Both email/password and Google OAuth are supported, ensuring a smooth and reliable login experience. Firebase also powers the real-time database and storage solutions for all shared content, including the new global daily questions system that ensures all couples receive the same prompts.
+
+### Technical Architecture Highlights
+- **Real-time Synchronization**: Mood sharing and daily questions update instantly between partners
+- **Deterministic Daily Questions**: Algorithm ensures all users get the same question each day based on date
+- **Smart State Management**: Efficient partner profile loading and caching for optimal performance
+- **Enhanced Security Model**: Granular Firestore rules allowing secure partner interactions and cross-user updates
+- **Mobile-First Design**: Optimized for touch interactions with improved navigation and visual feedback
 
 _See the full commit history for more details: [Recent Commits](https://github.com/sameernbutt/Long-Distance-App/commits?per_page=2)_
 
 ---
 
-This application is production-ready and provides a complete solution for long-distance couples to stay connected through shared experiences, planning, and communication.
+This application is production-ready and provides a comprehensive solution for long-distance couples to stay emotionally connected through synchronized daily experiences, real-time mood sharing, and shared planning activities. The recent updates have significantly enhanced the core relationship-building features while maintaining excellent mobile performance and security.
 
 

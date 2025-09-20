@@ -33,6 +33,8 @@ import FeedShareMenu from './components/FeedShareMenu';
 import FeedList from './components/FeedList';
 // import { useAuth } from './contexts/AuthContext';
 import { getPartnerId } from './firebase/moods';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from './firebase/config';
 // Import contexts
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { signOutUser } from './firebase/auth';
@@ -56,6 +58,8 @@ function AppContent() {
   const [showLogin, setShowLogin] = useState(false);
   const [showPartnerPairing, setShowPartnerPairing] = useState(false);
   const [coupleNames, setCoupleNames] = useState({ person1: '', person2: '' });
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [partnerProfile, setPartnerProfile] = useState<any>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('coupleNames');
@@ -71,6 +75,30 @@ function AppContent() {
       // Automatically open partner pairing with the code
       setShowPartnerPairing(true);
     }
+  }, [user]);
+
+  // Load partner information
+  useEffect(() => {
+    const loadPartnerInfo = async () => {
+      if (user?.uid) {
+        try {
+          const partnerIdResult = await getPartnerId(user.uid);
+          setPartnerId(partnerIdResult);
+          
+          if (partnerIdResult) {
+            // Get partner's profile
+            const partnerDoc = await getDoc(doc(db, 'users', partnerIdResult));
+            if (partnerDoc.exists()) {
+              setPartnerProfile(partnerDoc.data());
+            }
+          }
+        } catch (error) {
+          console.error('Error loading partner info:', error);
+        }
+      }
+    };
+
+    loadPartnerInfo();
   }, [user]);
 
   const handleLogout = async () => {
@@ -125,6 +153,24 @@ function AppContent() {
       case 'home':
         return (
           <div className="space-y-6">
+            {/* Relationship Status Header */}
+            <div className="text-center py-4">
+              {partnerId && partnerProfile && userProfile ? (
+                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-pink-50 to-purple-50 rounded-full border border-pink-200">
+                  <Heart className="w-4 h-4 text-pink-500 fill-current" />
+                  <span className="text-sm font-medium text-gray-800">
+                    {userProfile.displayName || 'You'} & {partnerProfile.displayName || 'Partner'}
+                  </span>
+                  <Heart className="w-4 h-4 text-pink-500 fill-current" />
+                </div>
+              ) : (
+                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-yellow-50 rounded-full border border-yellow-200">
+                  <span className="text-sm font-medium text-yellow-800">
+                    Pair with your partner to unlock more features
+                  </span>
+                </div>
+              )}
+            </div>
             <MoodSharing />
             <Countdown />
             <DailyQuestions />
