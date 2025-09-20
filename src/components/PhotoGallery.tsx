@@ -51,6 +51,10 @@ export default function PhotoGallery() {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    
+    // Always reset the input to allow selecting the same file again
+    event.target.value = '';
+    
     if (!file || !user?.uid) return;
 
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
@@ -64,7 +68,23 @@ export default function PhotoGallery() {
       let photoUrl: string | undefined = undefined;
       // Upload to Firebase Storage if user has a partner
       if (partnerId) {
-        photoUrl = await uploadFile(file, user.uid);
+        // Add timeout to prevent hanging uploads
+        const uploadPromise = uploadFile(file, user.uid);
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('Upload timeout')), 30000)
+        );
+        
+        try {
+          photoUrl = await Promise.race([uploadPromise, timeoutPromise]);
+        } catch (uploadError) {
+          if (uploadError instanceof Error && uploadError.message === 'Upload timeout') {
+            alert('Upload is taking too long. Please check your connection and try again.');
+          } else {
+            alert('Failed to upload photo to storage. Please try again.');
+          }
+          return;
+        }
+        
         // Add to feed
         const result = await addFeedItem(
           user.uid,
@@ -76,6 +96,8 @@ export default function PhotoGallery() {
         );
         if (result.error) {
           console.error('Failed to share photo:', result.error);
+          alert('Photo uploaded but failed to share with partner. Please try again.');
+          return;
         }
       } else {
         // Use local URL for immediate preview
@@ -98,13 +120,27 @@ export default function PhotoGallery() {
       };
       setPhotos(prev => [newPhoto, ...prev]);
       setCaption('');
-      event.target.value = '';
     } catch (error) {
       console.error('Error uploading photo:', error);
       alert('Failed to upload photo. Please try again.');
     } finally {
       setIsUploading(false);
     }
+  };
+
+  // Separate handler for camera capture to handle cancellation better
+  const handleCameraCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Immediately reset input to prevent UI freeze
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    
+    if (!file) {
+      // User cancelled, just return without any action
+      return;
+    }
+    
+    // Use the same upload logic
+    await handleFileUpload({ target: { files: [file], value: '' } } as any);
   };
 
   const toggleFavorite = (id: string) => {
@@ -223,7 +259,7 @@ export default function PhotoGallery() {
               type="file"
               accept="image/*"
               capture="environment"
-              onChange={handleFileUpload}
+              onChange={handleCameraCapture}
               disabled={isUploading}
               className="hidden"
             />

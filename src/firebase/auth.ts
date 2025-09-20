@@ -15,6 +15,7 @@ export interface UserProfile {
   email: string;
   displayName: string;
   photoURL?: string;
+  location?: string;
   partnerId?: string;
   partnerCode?: string;
   createdAt: any;
