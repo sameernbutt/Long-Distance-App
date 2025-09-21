@@ -89,9 +89,13 @@ export interface FeedComment {
 
 // Upload file to storage
 export const uploadFile = async (file: File, userId: string): Promise<string> => {
-  const fileRef = ref(storage, `feed/${userId}/${Date.now()}_${file.name}`);
+  const path = `feed/${userId}/${Date.now()}_${file.name}`;
+  const fileRef = ref(storage, path);
+  console.log('[uploadFile] uploading to storage path:', path);
   await uploadBytes(fileRef, file);
-  return await getDownloadURL(fileRef);
+  const url = await getDownloadURL(fileRef);
+  console.log('[uploadFile] got download URL:', url);
+  return url;
 };
 
 // Add item to feed

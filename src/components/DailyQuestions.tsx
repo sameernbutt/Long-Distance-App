@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Heart, MessageCircle } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPartnerId } from '../firebase/moods';
 import { saveDailyAnswer, getCoupleAnswers, getTodaysDailyQuestion } from '../firebase/dailyQuestions';
@@ -14,6 +14,7 @@ export default function DailyQuestions() {
   const { user, userProfile } = useAuth();
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [partnerProfile, setPartnerProfile] = useState<any>(null);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -120,27 +121,49 @@ export default function DailyQuestions() {
 
         <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100">
           <h4 className="font-semibold text-gray-800 mb-3">Your Answer</h4>
-          <textarea
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            placeholder="Share your thoughts..."
-            className="w-full p-3 md:p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-sm md:text-base"
-            rows={4}
-            disabled={!!coupleAnswers[user?.uid]?.answer}
-          />
-          <div className="flex justify-between items-center mt-4">
-            <span className="text-sm text-gray-500">
-              {answer.length}/500 characters
-            </span>
-            <button
-              onClick={saveAnswer}
-              disabled={!answer.trim() || !!coupleAnswers[user?.uid]?.answer}
-              className="flex items-center space-x-2 px-4 md:px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm md:text-base"
-            >
-              <Heart className="w-4 h-4" />
-              <span>Save Answer</span>
-            </button>
-          </div>
+          {!editing ? (
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-gray-600">{coupleAnswers[user?.uid]?.answer ? 'Answer saved' : 'No answer yet'}</div>
+              <div className="flex items-center space-x-2">
+                {!coupleAnswers[user?.uid]?.answer && (
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 transition-all duration-200 text-sm"
+                  >
+                    Answer
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              <textarea
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="Share your thoughts..."
+                className="w-full p-3 md:p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-sm md:text-base"
+                rows={4}
+              />
+              <div className="flex justify-between items-center mt-4">
+                <span className="text-sm text-gray-500">{answer.length}/500 characters</span>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => { setEditing(false); setAnswer(coupleAnswers[user?.uid]?.answer || ''); }}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => { await saveAnswer(); setEditing(false); }}
+                    disabled={!answer.trim()}
+                    className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="mt-8">
