@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Heart, Send, Check } from 'lucide-react';
+import { Heart, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { shareMood, getPartnerMoods, subscribeToPartnerMoods, getPartnerId } from '../firebase/moods';
+import { getUserProfile } from '../firebase/profile';
 
 interface Mood {
   id: string;
@@ -137,7 +138,7 @@ const moods: Mood[] = [
 export default function MoodSharing() {
   const { user } = useAuth();
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
-  const [moodMessage, setMoodMessage] = useState('');
+  // message feature removed — keep history only
   const [moodHistory, setMoodHistory] = useState<Array<{
     id: string;
     mood: string;
@@ -152,8 +153,8 @@ export default function MoodSharing() {
     timestamp: any;
   }>>([]);
   const [isShared, setIsShared] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [partnerProfile, setPartnerProfile] = useState<any | null>(null);
 
   useEffect(() => {
     // Load mood history from localStorage
@@ -171,18 +172,26 @@ export default function MoodSharing() {
         setPartnerId(partner);
         
         if (partner) {
+          // Load partner profile (for display name)
+          try {
+            const pProfile = await getUserProfile(partner);
+            setPartnerProfile(pProfile);
+          } catch (err) {
+            console.error('Failed to load partner profile', err);
+          }
+
           // Load partner moods
           const { moods, error } = await getPartnerMoods(user.uid);
           if (error) {
             console.error('Error loading partner moods:', error);
           }
           setPartnerMoods(moods);
-          
+
           // Subscribe to real-time partner mood updates
           const unsubscribe = subscribeToPartnerMoods(user.uid, (moods) => {
             setPartnerMoods(moods);
           });
-          
+
           return unsubscribe;
         }
       }
@@ -191,56 +200,37 @@ export default function MoodSharing() {
     loadPartnerData();
   }, [user?.uid]);
 
-  const handleMoodSelect = (moodId: string) => {
+  const handleMoodSelect = async (moodId: string) => {
     setSelectedMood(moodId);
     setIsShared(false);
-  };
-
-  const handleShareMood = async () => {
-    if (!selectedMood || !user?.uid) return;
-
-    const mood = moods.find(m => m.id === selectedMood);
-    if (!mood) return;
-
-    setLoading(true);
-
+    // Auto-share immediately when selecting a mood
+    const mood = moods.find(m => m.id === moodId);
+    if (!mood || !user?.uid) return;
     try {
-      const message = moodMessage.trim() || `${mood.emoji} Feeling ${mood.name.toLowerCase()} today!`;
-      
-      // If user has a partner, share with them
       if (partnerId) {
-        const result = await shareMood(user.uid, partnerId, mood.name, mood.emoji, message);
-        if (result.error) {
-          console.error('Failed to share mood with partner:', result.error);
-        }
+        await shareMood(user.uid, partnerId, mood.name, mood.emoji, '');
       }
 
-      // Also save locally for history
       const newMoodEntry = {
         id: Date.now().toString(),
         mood: mood.name,
-        message,
+        message: '',
         timestamp: Date.now()
       };
-
-      const updatedHistory = [newMoodEntry, ...moodHistory.slice(0, 4)]; // Keep last 5 entries
+      const updatedHistory = [newMoodEntry, ...moodHistory.slice(0, 4)];
       setMoodHistory(updatedHistory);
       localStorage.setItem('moodHistory', JSON.stringify(updatedHistory));
-
       setIsShared(true);
-      setMoodMessage('');
-      
-      // Reset selection after 2 seconds
       setTimeout(() => {
         setSelectedMood(null);
         setIsShared(false);
-      }, 2000);
-    } catch (error) {
-      console.error('Error sharing mood:', error);
-    } finally {
-      setLoading(false);
+      }, 1500);
+    } catch (err) {
+      console.error('Error auto-sharing mood', err);
     }
   };
+
+  // handleShareMood removed — moods are shared immediately on selection
 
   const formatTime = (timestamp: number | any) => {
     const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -259,12 +249,12 @@ export default function MoodSharing() {
           <Heart className="w-6 h-6 text-white" />
         </div>
         <h3 className="text-lg font-bold text-gray-800 mb-2">Share Your Mood</h3>
-        <p className="text-sm text-gray-600">Let your partner know how you're feeling today</p>
+        <p className="text-sm text-gray-600">Let your partner know how you're feeling today!</p>
       </div>
 
       {/* Mood Selection */}
       <div className="mb-6">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">How are you feeling?</h4>
+        {/* <h4 className="text-sm font-medium text-gray-700 mb-3">How are you feeling?</h4> */}
         <div className="flex space-x-3 overflow-x-auto pb-2">
           {moods.map((mood) => (
             <button
@@ -284,40 +274,7 @@ export default function MoodSharing() {
       </div>
 
 
-      {/* Message Input */}
-      {selectedMood && (
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Add a message (optional)
-          </label>
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              value={moodMessage}
-              onChange={(e) => setMoodMessage(e.target.value)}
-              placeholder="Share what's on your mind..."
-              className="flex-1 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-            />
-            <button
-              onClick={handleShareMood}
-              disabled={isShared || loading}
-              className={`px-4 py-3 rounded-lg font-medium text-sm transition-all duration-200 ${
-                isShared
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 disabled:opacity-50'
-              }`}
-            >
-              {isShared ? (
-                <Check className="w-4 h-4" />
-              ) : loading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Message feature removed — moods are sent immediately on selection */}
 
       {/* Success Message */}
       {isShared && (
@@ -331,48 +288,42 @@ export default function MoodSharing() {
 
       {/* Current Moods Display */}
       <div className="mb-6">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Current Moods</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Your Current Mood */}
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+        {/* <h4 className="text-sm font-medium text-gray-700 mb-3">Current Moods</h4> */}
+        <div className="flex gap-3">
+          {/* Your Current Mood - header + stacked emoji + label/time */}
+          <div className="flex-1">
             <h5 className="text-xs font-medium text-blue-700 mb-2">Your Mood</h5>
-            {moodHistory.length > 0 ? (
-              <div className="flex items-center space-x-3">
-                <div className="text-2xl">{moods.find(m => m.name === moodHistory[0].mood)?.emoji || '😊'}</div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-800">{moodHistory[0].message}</div>
+            <div className="flex items-center justify-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+              {moodHistory.length > 0 ? (
+                <div className="flex flex-col items-center">
+                  <div className="text-2xl">{moods.find(m => m.name === moodHistory[0].mood)?.emoji || '😊'}</div>
+                  <div className="text-sm font-medium text-gray-800 mt-1">{moodHistory[0].mood}</div>
                   <div className="text-xs text-gray-500">{formatTime(moodHistory[0].timestamp)}</div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-2">
+              ) : (
                 <div className="text-sm text-gray-500">Share your mood to get started!</div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* Partner's Current Mood */}
-          <div className="p-4 bg-pink-50 rounded-lg border border-pink-200">
-            <h5 className="text-xs font-medium text-pink-700 mb-2">Partner's Mood</h5>
-            {partnerId ? (
-              partnerMoods.length > 0 ? (
-                <div className="flex items-center space-x-3">
-                  <div className="text-2xl">{partnerMoods[0].emoji}</div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-800">{partnerMoods[0].message}</div>
+          {/* Partner's Current Mood - header uses partner's name, stacked emoji + label/time */}
+          <div className="flex-1">
+            <h5 className="text-xs font-medium text-pink-700 mb-2">{partnerProfile?.displayName || 'Partner'}'s Mood</h5>
+            <div className="flex items-center justify-center p-3 bg-pink-50 rounded-lg border border-pink-200">
+              {partnerId ? (
+                partnerMoods.length > 0 ? (
+                  <div className="flex flex-col items-center">
+                    <div className="text-2xl">{partnerMoods[0].emoji}</div>
+                    <div className="text-sm font-medium text-gray-800 mt-1">{partnerMoods[0].mood}</div>
                     <div className="text-xs text-gray-500">{formatTime(partnerMoods[0].timestamp)}</div>
                   </div>
-                </div>
-              ) : (
-                <div className="text-center py-2">
+                ) : (
                   <div className="text-sm text-gray-500">No mood shared yet</div>
-                </div>
-              )
-            ) : (
-              <div className="text-center py-2">
+                )
+              ) : (
                 <div className="text-sm text-gray-500">Not paired with partner</div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

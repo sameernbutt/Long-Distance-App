@@ -14,38 +14,26 @@ export interface DailyQuestionDoc {
   questionIndex: number;
 }
 
-const questions = [
-  "What's one thing that made you smile today?",
-  "If you could have dinner with anyone in the world, who would it be and why?",
-  "What's your favorite memory of us together?",
-  "What are you most looking forward to in our future?",
-  "What's something new you'd like to try together?",
-  "What song reminds you of me?",
-  "What's the best advice you've ever received?",
-  "If we could go anywhere in the world right now, where would you want to go?",
-  "What's something you've always wanted to learn?",
-  "What made you fall in love with me?",
-  "What's your biggest dream?",
-  "What's something you're grateful for today?",
-  "If you could relive any day with me, which would it be?",
-  "What's your favorite thing about our relationship?",
-  "What's something that always makes you laugh?",
-  "What's your love language and how do you like to receive love?",
-  "What's a goal you want to achieve this year?",
-  "What's your favorite way to spend a lazy day?",
-  "What's something you admire about me?",
-  "What's your favorite season and why?",
-  "What's a childhood memory that still makes you happy?",
-  "What's your idea of a perfect date night?",
-  "What's something you're proud of accomplishing recently?",
-  "What's a book, movie, or show you think I'd enjoy?",
-  "What's your favorite way to show affection?",
-  "What's something you've learned about yourself this year?",
-  "What's a tradition you'd like us to start?",
-  "What's your favorite thing about the place where you grew up?",
-  "What's something that always comforts you when you're feeling down?",
-  "What's a quality you hope our relationship always has?",
+let questions: string[] = [
+  // fallback list in case CSV fetch fails
+  "Questions weren't able to be loaded today, sorry! Regardless, how is your day?",
 ];
+
+// Try to load questions from public/dailyQuestions.csv (served by Vite)
+const loadQuestionsFromCSV = async () => {
+  try {
+    const res = await fetch('/resources/dailyQuestions.csv');
+    if (!res.ok) throw new Error('Failed to fetch CSV');
+    const text = await res.text();
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length > 0) questions = lines;
+  } catch (e) {
+    console.warn('Could not load dailyQuestions.csv, falling back to built-in list', e);
+  }
+};
+
+// warm-load CSV at module initialization (best-effort)
+loadQuestionsFromCSV();
 
 // Get today's global daily question (same for all users)
 export const getTodaysDailyQuestion = async (): Promise<string> => {
@@ -103,3 +91,13 @@ export const getCoupleAnswers = async (userId: string, partnerId: string, date: 
   const snap = await getDocs(q);
   return snap.docs.map(doc => doc.data() as DailyAnswer);
 };
+
+/*
+Note on CSV archive behavior:
+- The app now loads questions from `public/dailyQuestions.csv` at runtime (served by Vite/static host).
+- Moving a used question from that CSV into an archive CSV cannot be done reliably from client-side code because the browser cannot modify files on the server/public folder.
+- If you want used questions to be removed and archived, implement a small server-side script or Cloud Function that:
+  1) Reads the CSV, removes the used line, appends it to dailyQuestionsArchive.csv (or stores it in Firestore), and
+  2) Exposes an authenticated endpoint the app calls to request a new question.
+- I left a built-in fallback list so the app continues working without any backend change.
+*/
