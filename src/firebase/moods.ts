@@ -46,6 +46,17 @@ export const shareMood = async (
     
     const docRef = await addDoc(collection(db, 'moods'), moodEntry);
     
+    // Before adding the mirrored entry for the partner, verify that the creator
+    // is actually paired with that partner in Firestore. This avoids attempting
+    // a mirrored create that will be rejected by security rules and surfaces
+    // a clearer client-side error.
+    const actualPartner = await getPartnerId(userId);
+    if (!actualPartner || actualPartner !== partnerId) {
+      // Optionally: remove the created owner mood document to keep data consistent
+      // (left intentionally out for now to preserve owner's mood even if pairing changed)
+      throw new Error('Cannot share mood: you are not paired with the specified partner.');
+    }
+
     // Add mood entry for the partner (so they can see it)
     const partnerMoodEntry = {
       userId: partnerId,
@@ -56,7 +67,7 @@ export const shareMood = async (
       timestamp: serverTimestamp(),
       isFromPartner: true
     };
-    
+
     await addDoc(collection(db, 'moods'), partnerMoodEntry);
     
     return { success: true, error: null };

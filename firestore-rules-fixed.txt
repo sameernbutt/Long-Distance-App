@@ -4,8 +4,16 @@ service cloud.firestore {
     // Users can read/write their own profile
     // Also allow reading for partner connections and allow partners to update partnerId
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      // Allow partners to update each other's partnerId field
+      // Allow the user to read/write their own profile.
+      // Also allow a partnered user to read the other user's profile (so partners can view each other's profiles).
+      allow read: if request.auth != null && (
+        request.auth.uid == userId ||
+        // Check if the requester has partnerId equal to this userId
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.partnerId == userId
+      );
+      allow write: if request.auth != null && request.auth.uid == userId;
+
+      // Allow updating only the partnerId field in controlled scenarios (keeps previous behavior)
       allow update: if request.auth != null && 
         ('partnerId' in request.resource.data) &&
         (request.resource.data.keys().hasOnly(['partnerId']) || 
@@ -43,14 +51,40 @@ service cloud.firestore {
          request.auth.uid == request.resource.data.userId);
     }
     
-    // Moods - users can read/write their own moods
+    // Moods - users can read their own moods and write/create moods for themselves
     match /moods/{moodId} {
-      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Allow owner to read, and allow partner to read moods belonging to their partner
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.partnerId == resource.data.userId
+      );
+
+      // Creations: allow if creator is the owner (userId == auth.uid),
+      // OR allow a mirrored create for a partner when:
+      //  - the document marks isFromPartner == true
+      //  - and the creator's users/{creatorUid}.partnerId equals the target userId (they are paired)
+      allow create: if request.auth != null && (
+        request.resource.data.userId == request.auth.uid ||
+        (
+          request.resource.data.isFromPartner == true &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.partnerId == request.resource.data.userId
+        )
+      );
+
+      // Updates/deletes restricted to owner
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
     
     // Daily answers - users can read/write their own answers
     match /dailyAnswers/{answerId} {
-      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Allow owners to read/write their answers. Allow partner to read the partner's answers if paired.
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.partnerId == resource.data.userId
+      );
+      // Writes must be performed by owner
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
     
     // Global daily questions - everyone can read, system manages writes
