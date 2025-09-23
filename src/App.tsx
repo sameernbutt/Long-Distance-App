@@ -10,7 +10,8 @@ import {
   HelpCircle,
   MessageSquare,
   LogIn,
-  LogOut
+  LogOut,
+  Bell
 } from 'lucide-react';
 
 // Import all components
@@ -174,6 +175,24 @@ function AppContent() {
             <MoodSharing />
             <Countdown />
             <DailyQuestions />
+            
+            {/* Notification Button */}
+            {partnerId && (
+              <div className="p-4 md:p-6">
+                <div className="max-w-2xl mx-auto">
+                  <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+                    <Bell className="w-12 h-12 text-pink-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Send a Sweet Message</h3>
+                    <p className="text-gray-600 mb-4">Let your partner know you're thinking about them</p>
+                    <button
+                      className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 transition-all duration-200 font-medium"
+                    >
+                      Send "Thinking of You" Notification
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       case 'activities':
