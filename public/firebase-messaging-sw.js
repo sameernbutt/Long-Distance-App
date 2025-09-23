@@ -3,14 +3,13 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/10.12.4/firebase-messaging-compat.js');
 
 // Initialize Firebase in the service worker
-// Note: Replace these with your actual Firebase config values
 firebase.initializeApp({
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "your-api-key-here",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "your-project-id.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "your-project-id",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "your-project-id.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "your-sender-id",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "your-app-id"
+  apiKey: "AIzaSyDSdiAOPsDdbHkdTY1XS0E8seyxFfWGvHI",
+  authDomain: "long-distance-app-f43c7.firebaseapp.com",
+  projectId: "long-distance-app-f43c7",
+  storageBucket: "long-distance-app-f43c7.appspot.com",
+  messagingSenderId: "248936017993",
+  appId: "1:248936017993:web:4c1cb3accf43c4ffee0f98"
 });
 
 // Get Firebase Messaging instance
