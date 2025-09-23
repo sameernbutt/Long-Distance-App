@@ -39,6 +39,7 @@ import { db } from './firebase/config';
 // Import contexts
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { signOutUser } from './firebase/auth';
+import { requestNotificationPermission, sendThinkingOfYouNotification } from './firebase/messaging';
 
 type TabType = 'home' | 'activities' | 'profile' | 'feed' | 'dates';
 
@@ -61,6 +62,8 @@ function AppContent() {
   const [coupleNames, setCoupleNames] = useState({ person1: '', person2: '' });
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [partnerProfile, setPartnerProfile] = useState<any>(null);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  const [sendingNotification, setSendingNotification] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('coupleNames');
@@ -101,6 +104,55 @@ function AppContent() {
 
     loadPartnerInfo();
   }, [user]);
+
+  // Check notification permission on load
+  useEffect(() => {
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  // Request notification permission
+  const requestPermission = async () => {
+    try {
+      const token = await requestNotificationPermission();
+      if (token) {
+        setNotificationPermission('granted');
+        alert('Notifications enabled! You can now send sweet messages to your partner.');
+      } else {
+        setNotificationPermission('denied');
+        alert('Notification permission denied. Please enable notifications in your browser settings.');
+      }
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+      alert('Failed to enable notifications. Please try again.');
+    }
+  };
+
+  // Send "thinking of you" notification
+  const sendNotification = async () => {
+    if (!user?.uid || !partnerId || !userProfile) return;
+
+    setSendingNotification(true);
+    try {
+      const result = await sendThinkingOfYouNotification(
+        user.uid,
+        partnerId,
+        userProfile.displayName || 'Your partner'
+      );
+
+      if (result.success) {
+        alert('Sweet message sent! Your partner will be notified that you\'re thinking of them.');
+      } else {
+        alert('Failed to send notification. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      alert('Failed to send notification. Please try again.');
+    } finally {
+      setSendingNotification(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -184,11 +236,29 @@ function AppContent() {
                     <Bell className="w-12 h-12 text-pink-500 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-gray-800 mb-2">Send a Sweet Message</h3>
                     <p className="text-gray-600 mb-4">Let your partner know you're thinking about them</p>
-                    <button
-                      className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 transition-all duration-200 font-medium"
-                    >
-                      Send "Thinking of You" Notification
-                    </button>
+                    
+                    {notificationPermission === 'granted' ? (
+                      <button
+                        onClick={sendNotification}
+                        disabled={sendingNotification}
+                        className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+                      >
+                        {sendingNotification ? 'Sending...' : 'Send "Thinking of You" Notification'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={requestPermission}
+                        className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 font-medium"
+                      >
+                        Enable Notifications
+                      </button>
+                    )}
+                    
+                    {notificationPermission === 'denied' && (
+                      <p className="text-sm text-red-600 mt-2">
+                        Notifications are blocked. Please enable them in your browser settings.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
