@@ -117,23 +117,16 @@ export default function DailyQuestions() {
               </p>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100">
-          <h4 className="font-semibold text-gray-800 mb-3">Your Answer</h4>
           {!editing ? (
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-gray-600">{coupleAnswers[user?.uid]?.answer ? 'Answer saved' : 'No answer yet'}</div>
-              <div className="flex items-center space-x-2">
-                {!coupleAnswers[user?.uid]?.answer && (
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 transition-all duration-200 text-sm"
-                  >
-                    Answer
-                  </button>
-                )}
-              </div>
+            <div className="flex justify-center">
+              {!coupleAnswers[user?.uid]?.answer && (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 transition-all duration-200 font-medium"
+                >
+                  {Object.keys(coupleAnswers).length === 0 ? 'Be the first to answer!' : 'Answer'}
+                </button>
+              )}
             </div>
           ) : (
             <>
@@ -166,17 +159,20 @@ export default function DailyQuestions() {
           )}
         </div>
 
-        <div className="mt-8">
-          <h4 className="font-semibold text-gray-800 mb-4">Today's Answers</h4>
-          <div className="space-y-4">
-            {Object.entries(coupleAnswers).map(([uid, val]) => (
-              <div key={uid} className="bg-gray-50 rounded-xl p-4 border">
-                <p className="font-medium text-gray-700 mb-2 text-sm">{val.name}</p>
-                <p className="text-gray-600 text-sm">{val.answer}</p>
-              </div>
-            ))}
+        {/* Answers Display */}
+        {Object.keys(coupleAnswers).length > 0 && (
+          <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100">
+            <h4 className="font-semibold text-gray-800 mb-4">Today's Answers</h4>
+            <div className="space-y-4">
+              {Object.entries(coupleAnswers).map(([uid, val]) => (
+                <div key={uid} className="bg-gray-50 rounded-xl p-4 border">
+                  <p className="font-medium text-gray-700 mb-2 text-sm">{val.name}</p>
+                  <p className="text-gray-600 text-sm">{val.answer}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

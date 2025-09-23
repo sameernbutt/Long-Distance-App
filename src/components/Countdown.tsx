@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Heart, MapPin, Edit, Plus } from 'lucide-react';
+import { Calendar, Clock, Heart, MapPin, Edit, Plus, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPartnerId } from '../firebase/moods';
 import { getCoupleReunion, setCoupleReunion, subscribeToReunionChanges, ReunionData } from '../firebase/reunion';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 interface CountdownData {
   date: string;
@@ -30,6 +32,7 @@ export default function Countdown() {
   const [showSetReunion, setShowSetReunion] = useState(false);
   const [editData, setEditData] = useState(countdownData);
   const [loading, setLoading] = useState(true);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   // Load partner ID
   useEffect(() => {
@@ -142,6 +145,19 @@ export default function Countdown() {
     setShowSetReunion(false);
   };
 
+  const cancelReunion = async () => {
+    if (!user?.uid || !partnerId) return;
+    
+    try {
+      const coupleId = [user.uid, partnerId].sort().join('_');
+      await deleteDoc(doc(db, 'coupleReunions', coupleId));
+      setShowCancelConfirm(false);
+    } catch (error) {
+      console.error('Error canceling reunion:', error);
+      alert('Failed to cancel reunion. Please try again.');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -180,9 +196,6 @@ export default function Countdown() {
           </div>
         ) : !countdownData.date && !isEditing ? (
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
-            <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">No Reunion Set</h3>
-            <p className="text-gray-600 mb-4">Set your next reunion to start the countdown</p>
             <button
               onClick={handleSetReunion}
               className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 transition-all duration-200 font-medium"
@@ -261,16 +274,24 @@ export default function Countdown() {
           /* Countdown Display */
           <div className="space-y-6">
             {/* Event Info */}
-            <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl p-6 border border-pink-200">
+            <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl p-6 border border-pink-200 relative">
               <div className="text-center">
                 <div className="flex items-center justify-between mb-4">
                   <div></div>
-                  <button
-                    onClick={handleEdit}
-                    className="p-2 text-gray-500 hover:text-pink-600 hover:bg-pink-100 rounded-full transition-colors"
-                  >
-                    <Edit className="w-5 h-5" />
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={handleEdit}
+                      className="p-2 text-gray-500 hover:text-pink-600 hover:bg-pink-100 rounded-full transition-colors"
+                    >
+                      <Edit className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setShowCancelConfirm(true)}
+                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
                 
                 <Heart className="w-12 h-12 text-pink-500 fill-current mx-auto mb-4" />
@@ -292,25 +313,38 @@ export default function Countdown() {
 
             {/* Countdown Timer */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              <div className="grid grid-cols-4 gap-4 text-center">
-                {[
-                  { label: 'Days', value: timeLeft.days },
-                  { label: 'Hours', value: timeLeft.hours },
-                  { label: 'Minutes', value: timeLeft.minutes },
-                  { label: 'Seconds', value: timeLeft.seconds }
-                ].map((item, index) => (
-                  <div key={item.label} className="space-y-2">
-                    <div className={`text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent ${
-                      index === 3 ? 'animate-pulse' : ''
-                    }`}>
-                      {item.value.toString().padStart(2, '0')}
+              {timeLeft.days > 0 ? (
+                <div className="grid grid-cols-4 gap-4 text-center">
+                  {[
+                    { label: 'Days', value: timeLeft.days },
+                    { label: 'Hours', value: timeLeft.hours },
+                    { label: 'Minutes', value: timeLeft.minutes },
+                    { label: 'Seconds', value: timeLeft.seconds }
+                  ].map((item, index) => (
+                    <div key={item.label} className="space-y-2">
+                      <div className={`text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent ${
+                        index === 3 ? 'animate-pulse' : ''
+                      }`}>
+                        {item.value.toString().padStart(2, '0')}
+                      </div>
+                      <div className="text-sm text-gray-600 uppercase tracking-wide font-medium">
+                        {item.label}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 uppercase tracking-wide font-medium">
-                      {item.label}
-                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="text-4xl font-mono font-bold text-pink-600 mb-2">
+                    {timeLeft.hours.toString().padStart(2, '0')}:
+                    {timeLeft.minutes.toString().padStart(2, '0')}:
+                    {timeLeft.seconds.toString().padStart(2, '0')}
                   </div>
-                ))}
-              </div>
+                  <div className="text-sm text-gray-600 uppercase tracking-wide font-medium">
+                    Hours : Minutes : Seconds
+                  </div>
+                </div>
+              )}
 
               {timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0 && countdownData.date && (
                 <div className="mt-6 text-center">
@@ -334,6 +368,30 @@ export default function Countdown() {
                   <Heart className="w-8 h-8 text-rose-500 fill-current mx-auto mb-2" />
                   <p className="text-sm text-rose-800 font-medium">Distance means nothing when someone means everything</p>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Cancel Confirmation Modal */}
+        {showCancelConfirm && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Cancel Reunion?</h3>
+              <p className="text-gray-600 mb-6">Are you sure you want to cancel this reunion? This action cannot be undone.</p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowCancelConfirm(false)}
+                  className="flex-1 py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Keep Reunion
+                </button>
+                <button
+                  onClick={cancelReunion}
+                  className="flex-1 py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Cancel Reunion
+                </button>
               </div>
             </div>
           </div>
