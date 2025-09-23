@@ -22,19 +22,19 @@ VITE_FIREBASE_VAPID_KEY=your-actual-vapid-key
 ```
 
 **Update Service Worker:**
-Replace the placeholder values in `public/firebase-messaging-sw.js` with your actual Firebase config:
-```javascript
-firebase.initializeApp({
-  apiKey: "your-actual-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-actual-project-id", 
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "your-actual-sender-id",
-  appId: "your-actual-app-id"
-});
+The service worker will be automatically generated with your environment variables during build. Just make sure your `.env` file has all the required Firebase config values:
+
+```env
+VITE_FIREBASE_API_KEY=your-actual-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-actual-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-actual-sender-id
+VITE_FIREBASE_APP_ID=your-actual-app-id
+VITE_FIREBASE_VAPID_KEY=your-actual-vapid-key
 ```
 
-**Note:** The messaging service (`src/firebase/messaging.ts`) now uses your existing Firebase config from `src/firebase/config.ts` and will automatically pick up your environment variables!
+**Note:** The build process will automatically generate the service worker with your environment variables. The messaging service uses your existing Firebase config from `src/firebase/config.ts`!
 
 ### 2. Deploy Cloud Functions
 
