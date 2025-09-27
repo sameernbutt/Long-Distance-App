@@ -69,7 +69,7 @@ export interface FeedItem {
   id: string;
   userId: string;
   userName: string;
-  userPhotoURL?: string;
+  userPhotoURL?: string | null;
   type: 'photo' | 'video' | 'music';
   content: string; // URL for photos/videos, link for music
   caption: string;
@@ -102,7 +102,7 @@ export const uploadFile = async (file: File, userId: string): Promise<string> =>
 export const addFeedItem = async (
   userId: string,
   userName: string,
-  userPhotoURL: string | undefined,
+  userPhotoURL: string | null,
   type: 'photo' | 'video' | 'music',
   content: string,
   caption: string
@@ -111,7 +111,7 @@ export const addFeedItem = async (
     const feedItem: Omit<FeedItem, 'id'> = {
       userId,
       userName,
-      userPhotoURL,
+      userPhotoURL: userPhotoURL || null,
       type,
       content,
       caption,

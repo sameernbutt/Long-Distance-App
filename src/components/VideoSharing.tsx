@@ -71,7 +71,7 @@ export default function VideoSharing() {
         const result = await addFeedItem(
           user.uid,
           userProfile?.displayName || user.email || 'Unknown User',
-          userProfile?.photoURL,
+          userProfile?.photoURL || null,
           'video',
           videoUrl,
           caption.trim() || 'Shared with love 💕'
