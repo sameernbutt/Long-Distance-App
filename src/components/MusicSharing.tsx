@@ -93,6 +93,11 @@ export default function MusicSharing() {
         
         if (result.error) {
           console.error('Failed to share music:', result.error);
+          alert('Music failed to share with partner. Please try again.');
+          return;
+        } else {
+          // Show success message
+          alert('Music shared successfully with your partner! 💕');
         }
       }
 
@@ -157,6 +162,19 @@ export default function MusicSharing() {
       day: 'numeric' 
     });
   };
+
+  // Only show if user has a partner
+  if (!partnerId) {
+    return (
+      <div className="p-4 md:p-6">
+        <div className="text-center py-8">
+          <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Connect with Partner</h3>
+          <p className="text-gray-600">Pair with your partner to start sharing music together</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6">
