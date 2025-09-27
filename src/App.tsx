@@ -550,7 +550,7 @@ function FeedPage() {
         
         <nav className="p-4">
           <div className="space-y-1">
-            {tabs.map((tab) => {
+            {/* {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
@@ -566,7 +566,7 @@ function FeedPage() {
                   <span className="text-sm font-medium">{tab.label}</span>
                 </button>
               );
-            })}
+            })} */}
           </div>
           
           <div className="mt-6 pt-4 border-t border-gray-200">

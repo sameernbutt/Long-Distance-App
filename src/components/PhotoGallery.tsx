@@ -98,6 +98,9 @@ export default function PhotoGallery() {
           console.error('Failed to share photo:', result.error);
           alert('Photo uploaded but failed to share with partner. Please try again.');
           return;
+        } else {
+          // Show success message
+          alert('Photo shared successfully with your partner! 💕');
         }
       } else {
         // Use local URL for immediate preview
@@ -172,6 +175,19 @@ export default function PhotoGallery() {
   };
 
   const favoritePhotos = photos.filter(photo => photo.isFavorite);
+
+  // Only show if user has a partner
+  if (!partnerId) {
+    return (
+      <div className="p-4 md:p-6">
+        <div className="text-center py-8">
+          <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Connect with Partner</h3>
+          <p className="text-gray-600">Pair with your partner to start sharing photos together</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6">

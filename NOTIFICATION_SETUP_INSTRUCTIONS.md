@@ -54,10 +54,15 @@ npm install
 firebase deploy --only functions
 ```
 
-### 3. Update Firestore Rules
+### 3. Update Firestore & Storage Rules
 Deploy the updated Firestore rules from `firestore-rules-fixed.txt`:
 ```bash
 firebase deploy --only firestore:rules
+```
+
+Deploy the Storage rules from `storage.rules`:
+```bash
+firebase deploy --only storage
 ```
 
 ### 4. Update User Schema
