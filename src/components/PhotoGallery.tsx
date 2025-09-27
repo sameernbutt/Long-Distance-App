@@ -109,19 +109,20 @@ export default function PhotoGallery() {
           if (result.error) {
             console.error('Failed to share photo:', result.error);
             
-            if (isMobile) {
-              console.log('Mobile device - implementing retry mechanism...');
-              // On mobile, try again after a short delay
-              setTimeout(async () => {
-                try {
-                  const retryResult = await addFeedItem(
-                    user.uid,
-                    userProfile?.displayName || user.email || 'Unknown User',
-                    userProfile?.photoURL,
-                    'photo',
-                    photoUrl,
-                    caption.trim() || 'Shared with love 💕'
-                  );
+             if (isMobile) {
+               console.log('Mobile device - implementing retry mechanism...');
+               // On mobile, try again after a short delay
+               setTimeout(async () => {
+                 if (!photoUrl) return;
+                 try {
+                   const retryResult = await addFeedItem(
+                     user.uid,
+                     userProfile?.displayName || user.email || 'Unknown User',
+                     userProfile?.photoURL,
+                     'photo',
+                     photoUrl,
+                     caption.trim() || 'Shared with love 💕'
+                   );
                   
                   if (retryResult.error) {
                     console.error('Retry also failed:', retryResult.error);
@@ -146,19 +147,20 @@ export default function PhotoGallery() {
         } catch (feedError) {
           console.error('Error adding to feed:', feedError);
           
-          if (isMobile) {
-            console.log('Mobile device - implementing retry mechanism for exception...');
-            // On mobile, try again after a short delay
-            setTimeout(async () => {
-              try {
-                const retryResult = await addFeedItem(
-                  user.uid,
-                  userProfile?.displayName || user.email || 'Unknown User',
-                  userProfile?.photoURL,
-                  'photo',
-                  photoUrl,
-                  caption.trim() || 'Shared with love 💕'
-                );
+           if (isMobile) {
+             console.log('Mobile device - implementing retry mechanism for exception...');
+             // On mobile, try again after a short delay
+             setTimeout(async () => {
+               if (!photoUrl) return;
+               try {
+                 const retryResult = await addFeedItem(
+                   user.uid,
+                   userProfile?.displayName || user.email || 'Unknown User',
+                   userProfile?.photoURL,
+                   'photo',
+                   photoUrl,
+                   caption.trim() || 'Shared with love 💕'
+                 );
                 
                 if (retryResult.error) {
                   console.error('Retry also failed:', retryResult.error);
