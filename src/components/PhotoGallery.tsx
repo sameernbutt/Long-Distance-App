@@ -57,6 +57,12 @@ export default function PhotoGallery() {
     
     if (!file || !user?.uid) return;
 
+    // Add mobile debugging
+    const isMobile = navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('Mobile');
+    console.log('Upload starting - Mobile device:', isMobile);
+    console.log('User agent:', navigator.userAgent);
+    console.log('File details:', { name: file.name, size: file.size, type: file.type });
+
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
       alert('File size too large. Please choose a file under 5MB.');
       return;
@@ -85,22 +91,91 @@ export default function PhotoGallery() {
           return;
         }
         
-        // Add to feed
-        const result = await addFeedItem(
-          user.uid,
-          userProfile?.displayName || user.email || 'Unknown User',
-          userProfile?.photoURL,
-          'photo',
-          photoUrl,
-          caption.trim() || 'Shared with love 💕'
-        );
-        if (result.error) {
-          console.error('Failed to share photo:', result.error);
-          alert('Photo uploaded but failed to share with partner. Please try again.');
+        // Add to feed with mobile-specific handling
+        const isMobile = navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('Mobile');
+        
+        try {
+          const result = await addFeedItem(
+            user.uid,
+            userProfile?.displayName || user.email || 'Unknown User',
+            userProfile?.photoURL,
+            'photo',
+            photoUrl,
+            caption.trim() || 'Shared with love 💕'
+          );
+          
+          console.log('Feed item result:', result);
+          
+          if (result.error) {
+            console.error('Failed to share photo:', result.error);
+            
+            if (isMobile) {
+              console.log('Mobile device - implementing retry mechanism...');
+              // On mobile, try again after a short delay
+              setTimeout(async () => {
+                try {
+                  const retryResult = await addFeedItem(
+                    user.uid,
+                    userProfile?.displayName || user.email || 'Unknown User',
+                    userProfile?.photoURL,
+                    'photo',
+                    photoUrl,
+                    caption.trim() || 'Shared with love 💕'
+                  );
+                  
+                  if (retryResult.error) {
+                    console.error('Retry also failed:', retryResult.error);
+                    alert('Photo uploaded but failed to share with partner. Please try again.');
+                  } else {
+                    console.log('Retry successful!');
+                    alert('Photo shared successfully with your partner! 💕');
+                  }
+                } catch (retryError) {
+                  console.error('Retry error:', retryError);
+                  alert('Photo uploaded but failed to share with partner. Please try again.');
+                }
+              }, 1000); // Wait 1 second then retry
+            } else {
+              alert('Photo uploaded but failed to share with partner. Please try again.');
+            }
+            return;
+          } else {
+            // Show success message
+            alert('Photo shared successfully with your partner! 💕');
+          }
+        } catch (feedError) {
+          console.error('Error adding to feed:', feedError);
+          
+          if (isMobile) {
+            console.log('Mobile device - implementing retry mechanism for exception...');
+            // On mobile, try again after a short delay
+            setTimeout(async () => {
+              try {
+                const retryResult = await addFeedItem(
+                  user.uid,
+                  userProfile?.displayName || user.email || 'Unknown User',
+                  userProfile?.photoURL,
+                  'photo',
+                  photoUrl,
+                  caption.trim() || 'Shared with love 💕'
+                );
+                
+                if (retryResult.error) {
+                  console.error('Retry also failed:', retryResult.error);
+                  alert('Photo uploaded but failed to share with partner. Please try again.');
+                } else {
+                  console.log('Retry successful!');
+                  alert('Photo shared successfully with your partner! 💕');
+                }
+              } catch (retryError) {
+                console.error('Retry error:', retryError);
+                alert('Photo uploaded but failed to share with partner. Please try again.');
+              }
+            }, 1000);
+          } else {
+            alert('Photo uploaded but failed to share with partner. Please try again.');
+          }
           return;
-        } else {
-          // Show success message
-          alert('Photo shared successfully with your partner! 💕');
         }
       } else {
         // Use local URL for immediate preview
