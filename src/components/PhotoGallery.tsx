@@ -95,14 +95,14 @@ export default function PhotoGallery() {
         const isMobile = navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('Mobile');
         
         try {
-          const result = await addFeedItem(
-            user.uid,
-            userProfile?.displayName || user.email || 'Unknown User',
-            userProfile?.photoURL,
-            'photo',
-            photoUrl,
-            caption.trim() || 'Shared with love 💕'
-          );
+           const result = await addFeedItem(
+             user.uid,
+             userProfile?.displayName || user.email || 'Unknown User',
+             userProfile?.photoURL || null,
+             'photo',
+             photoUrl,
+             caption.trim() || 'Shared with love 💕'
+           );
           
           console.log('Feed item result:', result);
           
@@ -118,7 +118,7 @@ export default function PhotoGallery() {
                    const retryResult = await addFeedItem(
                      user.uid,
                      userProfile?.displayName || user.email || 'Unknown User',
-                     userProfile?.photoURL,
+                     userProfile?.photoURL || null,
                      'photo',
                      photoUrl,
                      caption.trim() || 'Shared with love 💕'
@@ -156,7 +156,7 @@ export default function PhotoGallery() {
                  const retryResult = await addFeedItem(
                    user.uid,
                    userProfile?.displayName || user.email || 'Unknown User',
-                   userProfile?.photoURL,
+                   userProfile?.photoURL || null,
                    'photo',
                    photoUrl,
                    caption.trim() || 'Shared with love 💕'

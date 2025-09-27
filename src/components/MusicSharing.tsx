@@ -85,7 +85,7 @@ export default function MusicSharing() {
         const result = await addFeedItem(
           user.uid,
           userProfile?.displayName || user.email || 'Unknown User',
-          userProfile?.photoURL,
+          userProfile?.photoURL || null,
           'music',
           newSong.url.trim() || '',
           caption
