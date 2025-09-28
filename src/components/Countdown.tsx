@@ -353,23 +353,6 @@ export default function Countdown() {
                 </div>
               )}
             </div>
-
-            {/* Motivational Messages */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
-                <div className="text-center">
-                  <Clock className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                  <p className="text-sm text-blue-800 font-medium">Every moment apart brings you closer to being together</p>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-xl p-4 border border-rose-200">
-                <div className="text-center">
-                  <Heart className="w-8 h-8 text-rose-500 fill-current mx-auto mb-2" />
-                  <p className="text-sm text-rose-800 font-medium">Distance means nothing when someone means everything</p>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
