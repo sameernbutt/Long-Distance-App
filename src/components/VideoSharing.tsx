@@ -159,21 +159,7 @@ export default function VideoSharing() {
       </div>
 
       <div className="max-w-4xl mx-auto">
-        {/* Partner Status */}
-        <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100 mb-6">
-          <div className="text-center">
-            <div className="text-sm text-gray-600 mb-1">Video Sharing Status</div>
-            <div className="text-lg font-semibold text-gray-800">
-              {partnerId ? 'Connected with Partner' : 'Not Paired'}
-            </div>
-            <div className="text-xs text-gray-500 mt-1">
-              {partnerId 
-                ? 'Share videos with your partner in real-time!'
-                : 'Pair with your partner to share videos together'
-              }
-            </div>
-          </div>
-        </div>
+
 
         {/* Upload Section */}
         <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 mb-8">
@@ -244,72 +230,6 @@ export default function VideoSharing() {
           </div>
         </div>
 
-        {/* Favorites Section */}
-        {favoriteVideos.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center space-x-2 mb-4">
-              <Heart className="w-5 h-5 text-pink-500 fill-current" />
-              <h3 className="text-xl font-bold text-gray-800">Favorites</h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {favoriteVideos.map(video => (
-                <div key={video.id} className="relative group cursor-pointer" onClick={() => setSelectedVideo(video)}>
-                  <div className="relative">
-                    <video
-                      src={video.url}
-                      className="w-full h-48 object-cover rounded-xl shadow-lg"
-                      poster={video.thumbnail}
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-xl transition-all duration-200 flex items-center justify-center">
-                      <Play className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                    </div>
-                    <div className="absolute top-2 right-2">
-                      <Heart className="w-4 h-4 text-pink-500 fill-current" />
-                    </div>
-                  </div>
-                  <p className="mt-2 text-sm text-gray-600 truncate">{video.caption}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Video Grid */}
-        {videos.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {videos.map(video => (
-              <div key={video.id} className="relative group cursor-pointer" onClick={() => setSelectedVideo(video)}>
-                <div className="relative">
-                  <video
-                    src={video.url}
-                    className="w-full h-48 object-cover rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200"
-                    poster={video.thumbnail}
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-xl transition-all duration-200 flex items-center justify-center">
-                    <Play className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(video.id);
-                    }}
-                    className="absolute top-2 right-2 p-1 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                  >
-                    <Heart className={`w-4 h-4 ${video.isFavorite ? 'text-pink-500 fill-current' : 'text-gray-600'}`} />
-                  </button>
-                </div>
-                <p className="mt-2 text-sm text-gray-600 truncate">{video.caption}</p>
-                <p className="text-xs text-gray-500">{formatDate(video.timestamp)}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">No videos shared yet</p>
-            <p className="text-sm text-gray-400">Upload your first video to start building your shared collection</p>
-          </div>
-        )}
       </div>
 
       {/* Video Modal */}
