@@ -3,6 +3,7 @@ import { Camera, Upload, Heart, X, Download } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { addFeedItem, getFeedItems, uploadFile } from '../firebase/feed';
 import { getPartnerId } from '../firebase/moods';
+import CameraInterface from './CameraInterface';
 
 interface Photo {
   id: string;
@@ -19,6 +20,9 @@ export default function PhotoGallery() {
   const [isUploading, setIsUploading] = useState(false);
   const [caption, setCaption] = useState('');
   const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [uploadedPhoto, setUploadedPhoto] = useState<{url: string, file: File} | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
 
   // Load partner ID and feed items
   useEffect(() => {
@@ -57,12 +61,6 @@ export default function PhotoGallery() {
     
     if (!file || !user?.uid) return;
 
-    // Add mobile debugging
-    const isMobile = navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('Mobile');
-    console.log('Upload starting - Mobile device:', isMobile);
-    console.log('User agent:', navigator.userAgent);
-    console.log('File details:', { name: file.name, size: file.size, type: file.type });
-
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
       alert('File size too large. Please choose a file under 5MB.');
       return;
@@ -71,10 +69,10 @@ export default function PhotoGallery() {
     setIsUploading(true);
 
     try {
-      let photoUrl: string | undefined = undefined;
-      // Upload to Firebase Storage if user has a partner
+      let photoUrl: string;
+      
       if (partnerId) {
-        // Add timeout to prevent hanging uploads
+        // Upload to Firebase Storage
         const uploadPromise = uploadFile(file, user.uid);
         const timeoutPromise = new Promise<never>((_, reject) => 
           setTimeout(() => reject(new Error('Upload timeout')), 30000)
@@ -90,95 +88,6 @@ export default function PhotoGallery() {
           }
           return;
         }
-        
-        // Add to feed with mobile-specific handling
-        const isMobile = navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('Mobile');
-        
-        try {
-           const result = await addFeedItem(
-             user.uid,
-             userProfile?.displayName || user.email || 'Unknown User',
-             userProfile?.photoURL || null,
-             'photo',
-             photoUrl,
-             caption.trim() || 'Shared with love 💕'
-           );
-          
-          console.log('Feed item result:', result);
-          
-          if (result.error) {
-            console.error('Failed to share photo:', result.error);
-            
-             if (isMobile) {
-               console.log('Mobile device - implementing retry mechanism...');
-               // On mobile, try again after a short delay
-               setTimeout(async () => {
-                 if (!photoUrl) return;
-                 try {
-                   const retryResult = await addFeedItem(
-                     user.uid,
-                     userProfile?.displayName || user.email || 'Unknown User',
-                     userProfile?.photoURL || null,
-                     'photo',
-                     photoUrl,
-                     caption.trim() || 'Shared with love 💕'
-                   );
-                  
-                  if (retryResult.error) {
-                    console.error('Retry also failed:', retryResult.error);
-                    alert('Photo uploaded but failed to share with partner. Please try again.');
-                  } else {
-                    console.log('Retry successful!');
-                    alert('Photo shared successfully with your partner! 💕');
-                  }
-                } catch (retryError) {
-                  console.error('Retry error:', retryError);
-                  alert('Photo uploaded but failed to share with partner. Please try again.');
-                }
-              }, 1000); // Wait 1 second then retry
-            } else {
-              alert('Photo uploaded but failed to share with partner. Please try again.');
-            }
-            return;
-          } else {
-            // Show success message
-            alert('Photo shared successfully with your partner! 💕');
-          }
-        } catch (feedError) {
-          console.error('Error adding to feed:', feedError);
-          
-           if (isMobile) {
-             console.log('Mobile device - implementing retry mechanism for exception...');
-             // On mobile, try again after a short delay
-             setTimeout(async () => {
-               if (!photoUrl) return;
-               try {
-                 const retryResult = await addFeedItem(
-                   user.uid,
-                   userProfile?.displayName || user.email || 'Unknown User',
-                   userProfile?.photoURL || null,
-                   'photo',
-                   photoUrl,
-                   caption.trim() || 'Shared with love 💕'
-                 );
-                
-                if (retryResult.error) {
-                  console.error('Retry also failed:', retryResult.error);
-                  alert('Photo uploaded but failed to share with partner. Please try again.');
-                } else {
-                  console.log('Retry successful!');
-                  alert('Photo shared successfully with your partner! 💕');
-                }
-              } catch (retryError) {
-                console.error('Retry error:', retryError);
-                alert('Photo uploaded but failed to share with partner. Please try again.');
-              }
-            }, 1000);
-          } else {
-            alert('Photo uploaded but failed to share with partner. Please try again.');
-          }
-          return;
-        }
       } else {
         // Use local URL for immediate preview
         photoUrl = await new Promise<string>((resolve) => {
@@ -189,16 +98,9 @@ export default function PhotoGallery() {
           reader.readAsDataURL(file);
         });
       }
-      if (!photoUrl) throw new Error('No photo URL');
-      // Add to local state for immediate UI update
-      const newPhoto: Photo = {
-        id: Date.now().toString(),
-        url: photoUrl,
-        caption: caption.trim() || 'Shared with love 💕',
-        timestamp: Date.now(),
-        isFavorite: false
-      };
-      setPhotos(prev => [newPhoto, ...prev]);
+
+      // Store uploaded photo for preview and sharing
+      setUploadedPhoto({ url: photoUrl, file });
       setCaption('');
     } catch (error) {
       console.error('Error uploading photo:', error);
@@ -208,8 +110,105 @@ export default function PhotoGallery() {
     }
   };
 
+  const handleSharePhoto = async () => {
+    if (!uploadedPhoto || !user?.uid || !partnerId) return;
+
+    setIsSharing(true);
+
+    try {
+      const isMobile = navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('Mobile');
+      
+      const result = await addFeedItem(
+        user.uid,
+        userProfile?.displayName || user.email || 'Unknown User',
+        userProfile?.photoURL || null,
+        'photo',
+        uploadedPhoto.url,
+        caption.trim() || 'Shared with love 💕'
+      );
+      
+      console.log('Feed item result:', result);
+      
+      if (result.error) {
+        console.error('Failed to share photo:', result.error);
+        
+        if (isMobile) {
+          console.log('Mobile device - implementing retry mechanism...');
+          // On mobile, try again after a short delay
+          setTimeout(async () => {
+            try {
+              const retryResult = await addFeedItem(
+                user.uid,
+                userProfile?.displayName || user.email || 'Unknown User',
+                userProfile?.photoURL || null,
+                'photo',
+                uploadedPhoto.url,
+                caption.trim() || 'Shared with love 💕'
+              );
+              
+              if (retryResult.error) {
+                console.error('Retry also failed:', retryResult.error);
+                alert('Photo uploaded but failed to share with partner. Please try again.');
+              } else {
+                console.log('Retry successful!');
+                alert('Photo shared successfully with your partner! 💕');
+                // Add to local state for immediate UI update
+                const newPhoto: Photo = {
+                  id: result.id || Date.now().toString(),
+                  url: uploadedPhoto.url,
+                  caption: caption.trim() || 'Shared with love 💕',
+                  timestamp: Date.now(),
+                  isFavorite: false
+                };
+                setPhotos(prev => [newPhoto, ...prev]);
+                setUploadedPhoto(null);
+                setCaption('');
+              }
+            } catch (retryError) {
+              console.error('Retry error:', retryError);
+              alert('Photo uploaded but failed to share with partner. Please try again.');
+            }
+          }, 1000);
+        } else {
+          alert('Photo uploaded but failed to share with partner. Please try again.');
+        }
+        return;
+      } else {
+        // Show success message
+        alert('Photo shared successfully with your partner! 💕');
+        // Add to local state for immediate UI update
+        const newPhoto: Photo = {
+          id: result.id || Date.now().toString(),
+          url: uploadedPhoto.url,
+          caption: caption.trim() || 'Shared with love 💕',
+          timestamp: Date.now(),
+          isFavorite: false
+        };
+        setPhotos(prev => [newPhoto, ...prev]);
+        setUploadedPhoto(null);
+        setCaption('');
+      }
+    } catch (feedError) {
+      console.error('Error adding to feed:', feedError);
+      alert('Photo uploaded but failed to share with partner. Please try again.');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleCancelUpload = () => {
+    setUploadedPhoto(null);
+    setCaption('');
+  };
+
+  const handleCameraCapture = async (file: File) => {
+    setShowCamera(false);
+    // Process the captured file the same way as file upload
+    await handleFileUpload({ target: { files: [file], value: '' } } as any);
+  };
+
   // Separate handler for camera capture to handle cancellation better
-  const handleCameraCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileCameraCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
     // Immediately reset input to prevent UI freeze
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -234,6 +233,12 @@ export default function PhotoGallery() {
     setSelectedPhoto(null);
   };
 
+  const canDeletePhoto = (timestamp: number) => {
+    const now = Date.now();
+    const twoMinutes = 2 * 60 * 1000; // 2 minutes in milliseconds
+    return (now - timestamp) < twoMinutes;
+  };
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('en-US', { 
       year: 'numeric', 
@@ -251,7 +256,6 @@ export default function PhotoGallery() {
     link.click();
   };
 
-  const favoritePhotos = photos.filter(photo => photo.isFavorite);
 
   // Only show if user has a partner
   if (!partnerId) {
@@ -278,83 +282,169 @@ export default function PhotoGallery() {
 
         
 
-        {/* Upload Section */}
-        <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 mb-8">
-          <div className="text-center">
-            <div className="p-4 bg-gradient-to-r from-pink-100 to-purple-100 rounded-full w-fit mx-auto mb-4">
-              <Camera className="w-8 h-8 text-pink-600" />
-            </div>
-            
-            <h3 className="text-xl font-bold text-gray-800 mb-2">Share a Photo</h3>
-            <p className="text-gray-600 mb-4">Upload a special moment to share with your partner</p>
-            
-            <div className="mb-4">
-              <input
-                type="text"
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder="Add a caption (optional)"
-                className="w-full max-w-md p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              />
-            </div>
+         {/* Upload Section */}
+         {!uploadedPhoto ? (
+           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 mb-8">
+             <div className="text-center">
+               <div className="p-4 bg-gradient-to-r from-pink-100 to-purple-100 rounded-full w-fit mx-auto mb-4">
+                 <Camera className="w-8 h-8 text-pink-600" />
+               </div>
+               
+               <h3 className="text-xl font-bold text-gray-800 mb-2">Share a Photo</h3>
+               <p className="text-gray-600 mb-4">Upload a special moment to share with your partner</p>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <label 
-                htmlFor="photo-upload"
-                className={`inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 cursor-pointer transition-all duration-200 ${
-                  isUploading ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                {isUploading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Uploading...</span>
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-5 h-5" />
-                    <span>Choose Photo</span>
-                  </>
-                )}
-              </label>
-              <label
-                htmlFor="photo-capture"
-                className={`inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-400 to-purple-400 text-white rounded-xl hover:from-pink-500 hover:to-purple-500 cursor-pointer transition-all duration-200 ${
-                  isUploading ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                <Camera className="w-5 h-5" />
-                <span>Take Photo</span>
-              </label>
-            </div>
-            <input
-              id="photo-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              disabled={isUploading}
-              className="hidden"
-            />
-            <input
-              id="photo-capture"
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleCameraCapture}
-              disabled={isUploading}
-              className="hidden"
-            />
-          </div>
-        </div>
+               <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                 <label 
+                   htmlFor="photo-upload"
+                   className={`inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 cursor-pointer transition-all duration-200 ${
+                     isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                   }`}
+                 >
+                   {isUploading ? (
+                     <>
+                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                       <span>Uploading...</span>
+                     </>
+                   ) : (
+                     <>
+                       <Upload className="w-5 h-5" />
+                       <span>Choose Photo</span>
+                     </>
+                   )}
+                 </label>
+               <button
+                 onClick={() => setShowCamera(true)}
+                 disabled={isUploading}
+                 className={`inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-400 to-purple-400 text-white rounded-xl hover:from-pink-500 hover:to-purple-500 transition-all duration-200 ${
+                   isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                 }`}
+               >
+                 <Camera className="w-5 h-5" />
+                 <span>Take Photo</span>
+               </button>
+               </div>
+               <input
+                 id="photo-upload"
+                 type="file"
+                 accept="image/*"
+                 onChange={handleFileUpload}
+                 disabled={isUploading}
+                 className="hidden"
+               />
+             <input
+               id="photo-capture"
+               type="file"
+               accept="image/*"
+               capture="environment"
+               onChange={handleFileCameraCapture}
+               disabled={isUploading}
+               className="hidden"
+             />
+             </div>
+           </div>
+         ) : (
+           /* Upload Preview Section */
+           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 mb-8">
+             <div className="text-center">
+               <h3 className="text-xl font-bold text-gray-800 mb-4">Preview & Share</h3>
+               
+               {/* Photo Preview */}
+               <div className="mb-4">
+                 <img
+                   src={uploadedPhoto.url}
+                   alt="Upload preview"
+                   className="w-full max-w-md mx-auto rounded-xl shadow-lg"
+                 />
+               </div>
+               
+               {/* Caption Input */}
+               <div className="mb-6">
+                 <input
+                   type="text"
+                   value={caption}
+                   onChange={(e) => setCaption(e.target.value)}
+                   placeholder="Add a caption (optional)"
+                   className="w-full max-w-md p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                 />
+               </div>
+
+               {/* Action Buttons */}
+               <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                 <button
+                   onClick={handleSharePhoto}
+                   disabled={isSharing}
+                   className={`inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 ${
+                     isSharing ? 'opacity-50 cursor-not-allowed' : ''
+                   }`}
+                 >
+                   {isSharing ? (
+                     <>
+                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                       <span>Sharing...</span>
+                     </>
+                   ) : (
+                     <>
+                       <Upload className="w-5 h-5" />
+                       <span>Share with Partner</span>
+                     </>
+                   )}
+                 </button>
+                 
+                 <button
+                   onClick={handleCancelUpload}
+                   className="inline-flex items-center space-x-2 px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-all duration-200"
+                 >
+                   <X className="w-5 h-5" />
+                   <span>Cancel</span>
+                 </button>
+               </div>
+             </div>
+           </div>
+         )}
 
 
         {/* Photo Grid */}
         {photos.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {photos.map(photo => (
+              <div key={photo.id} className="relative group cursor-pointer" onClick={() => setSelectedPhoto(photo)}>
+                <img
+                  src={photo.url}
+                  alt={photo.caption}
+                  className="w-full h-32 object-cover rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-xl transition-all duration-200" />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(photo.id);
+                  }}
+                  className="absolute top-2 right-2 p-1 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                >
+                  <Heart className={`w-4 h-4 ${photo.isFavorite ? 'text-pink-500 fill-current' : 'text-gray-600'}`} />
+                </button>
+                {/* Delete button for recent posts */}
+                {canDeletePhoto(photo.timestamp) && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm('Are you sure you want to delete this photo?')) {
+                        deletePhoto(photo.id);
+                      }
+                    }}
+                    className="absolute top-2 left-2 p-1 bg-red-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  >
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         ) : (
           <div className="text-center py-12">
             <Camera className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500 mb-4">No photos shared yet</p>
+            <p className="text-sm text-gray-400">Upload your first photo to start building your shared gallery</p>
           </div>
         )}
       </div>
@@ -381,38 +471,52 @@ export default function PhotoGallery() {
               <p className="text-lg font-medium text-gray-800 mb-2">{selectedPhoto.caption}</p>
               <p className="text-sm text-gray-600 mb-4">{formatDate(selectedPhoto.timestamp)}</p>
               
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => toggleFavorite(selectedPhoto.id)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-colors ${
-                    selectedPhoto.isFavorite
-                      ? 'bg-pink-100 text-pink-600'
-                      : 'bg-gray-100 text-gray-600 hover:bg-pink-100 hover:text-pink-600'
-                  }`}
-                >
-                  <Heart className={`w-4 h-4 ${selectedPhoto.isFavorite ? 'fill-current' : ''}`} />
-                  <span>{selectedPhoto.isFavorite ? 'Favorited' : 'Add to Favorites'}</span>
-                </button>
-                
-                <button
-                  onClick={() => downloadPhoto(selectedPhoto)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Download</span>
-                </button>
-                
-                <button
-                  onClick={() => deletePhoto(selectedPhoto.id)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                  <span>Delete</span>
-                </button>
-              </div>
+               <div className="flex space-x-3">
+                 <button
+                   onClick={() => toggleFavorite(selectedPhoto.id)}
+                   className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-colors ${
+                     selectedPhoto.isFavorite
+                       ? 'bg-pink-100 text-pink-600'
+                       : 'bg-gray-100 text-gray-600 hover:bg-pink-100 hover:text-pink-600'
+                   }`}
+                 >
+                   <Heart className={`w-4 h-4 ${selectedPhoto.isFavorite ? 'fill-current' : ''}`} />
+                   <span>{selectedPhoto.isFavorite ? 'Favorited' : 'Add to Favorites'}</span>
+                 </button>
+                 
+                 <button
+                   onClick={() => downloadPhoto(selectedPhoto)}
+                   className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 transition-colors"
+                 >
+                   <Download className="w-4 h-4" />
+                   <span>Download</span>
+                 </button>
+                 
+                 {canDeletePhoto(selectedPhoto.timestamp) && (
+                   <button
+                     onClick={() => {
+                       if (confirm('Are you sure you want to delete this photo?')) {
+                         deletePhoto(selectedPhoto.id);
+                       }
+                     }}
+                     className="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition-colors"
+                   >
+                     <X className="w-4 h-4" />
+                     <span>Delete</span>
+                   </button>
+                 )}
+               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Camera Interface */}
+      {showCamera && (
+        <CameraInterface
+          onCapture={handleCameraCapture}
+          onClose={() => setShowCamera(false)}
+        />
       )}
     </div>
   );
