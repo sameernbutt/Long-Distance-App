@@ -180,25 +180,10 @@ export default function MusicSharing() {
     <div className="p-4 md:p-6">
       <div className="text-center mb-6">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Music Sharing</h2>
-        <p className="text-gray-600 text-sm md:text-base">Share your favorite songs and create playlists together</p>
+        <p className="text-gray-600 text-sm md:text-base">Share your favorite songs together</p>
       </div>
 
       <div className="max-w-4xl mx-auto">
-        {/* Partner Status */}
-        <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100 mb-6">
-          <div className="text-center">
-            <div className="text-sm text-gray-600 mb-1">Music Sharing Status</div>
-            <div className="text-lg font-semibold text-gray-800">
-              {partnerId ? 'Connected with Partner' : 'Not Paired'}
-            </div>
-            <div className="text-xs text-gray-500 mt-1">
-              {partnerId 
-                ? 'Share music with your partner in real-time!'
-                : 'Pair with your partner to share music together'
-              }
-            </div>
-          </div>
-        </div>
 
         {/* Tab Navigation */}
         <div className="flex space-x-4 mb-6">
