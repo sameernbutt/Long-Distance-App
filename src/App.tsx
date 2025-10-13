@@ -11,7 +11,9 @@ import {
   MessageSquare,
   LogIn,
   LogOut,
-  Bell
+  Bell,
+  Moon,
+  Sun
 } from 'lucide-react';
 
 // Import all components
@@ -64,6 +66,7 @@ function AppContent() {
   const [partnerProfile, setPartnerProfile] = useState<any>(null);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [sendingNotification, setSendingNotification] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Touch events for swipe to close menu
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -264,19 +267,27 @@ function AppContent() {
                 </div>
               )}
             </div>
-            <MoodSharing />
-            <Countdown />
-            <DailyQuestions />
+            <MoodSharing isDarkMode={isDarkMode} />
+            <Countdown isDarkMode={isDarkMode} />
+            <DailyQuestions isDarkMode={isDarkMode} />
             
             {/* Notification Button */}
             {partnerId && (
               <div className="p-4 md:p-6">
                 <div className="max-w-2xl mx-auto">
-                  <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+                  <div className={`rounded-xl p-6 shadow-lg border text-center transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-800 border-gray-700' 
+                      : 'bg-white border-gray-100'
+                  }`}>
                     <Bell className="w-12 h-12 text-pink-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Send a Sweet Message</h3>
-                    <p className="text-gray-600 mb-4">Let your partner know you're thinking about them</p>
-                    
+                    <h3 className={`text-lg font-semibold mb-2 transition-colors ${
+                      isDarkMode ? 'text-white' : 'text-gray-800'
+                    }`}>Send a Sweet Message</h3>
+                    <p className={`mb-4 transition-colors ${
+                      isDarkMode ? 'text-pink-100 text-sm' : 'text-gray-600 text-sm'
+                    }`}>Let your partner know you're thinking about them</p>
+
                     {notificationPermission === 'granted' ? (
                       <button
                         onClick={sendNotification}
@@ -402,18 +413,30 @@ function FeedPage() {
     if (coupleNames.person1 && coupleNames.person2) {
       return `${coupleNames.person1} & ${coupleNames.person2}`;
     }
-    return 'Together Apart';
+    return 'Lovespark';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 safe-area-top safe-area-bottom">
+    <div className={`min-h-screen safe-area-top safe-area-bottom transition-colors duration-300 ${
+      isDarkMode 
+        ? 'bg-black' 
+        : 'bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50'
+    }`}>
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-pink-200 sticky top-0 z-40 safe-area-top">
+      <header className={`backdrop-blur-md border-b sticky top-0 z-40 safe-area-top transition-colors duration-300 ${
+        isDarkMode 
+          ? 'bg-gray-800/80 border-gray-700' 
+          : 'bg-white/80 border-pink-200'
+      }`}>
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 text-gray-600 hover:text-pink-600 hover:bg-pink-100 rounded-xl transition-colors"
+              className={`p-2 rounded-xl transition-colors ${
+                isDarkMode 
+                  ? 'text-gray-300 hover:text-pink-400 hover:bg-gray-700' 
+                  : 'text-gray-600 hover:text-pink-600 hover:bg-pink-100'
+              }`}
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -423,8 +446,12 @@ function FeedPage() {
                 <Heart className="w-6 h-6 text-white fill-current" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-gray-800">{getAppTitle()}</h1>
-                <p className="text-xs text-gray-600">Long Distance Love</p>
+                <h1 className={`text-lg font-bold transition-colors ${
+                  isDarkMode ? 'text-white' : 'text-gray-800'
+                }`}>{getAppTitle()}</h1>
+                <p className={`text-xs transition-colors ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>Long Distance Love</p>
               </div>
             </div>
           </div>
@@ -443,22 +470,26 @@ function FeedPage() {
         
         {/* Sliding menu */}
         <div 
-          className={`absolute left-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-xl transform transition-transform duration-300 ease-out ${
-            isMenuOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+          className={`absolute left-0 top-0 h-full w-80 max-w-[85vw] shadow-xl transform transition-transform duration-300 ease-out ${
+            isDarkMode ? 'bg-gray-800' : 'bg-white'
+          } ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-4 border-b border-gray-200">
+          <div className={`p-4 border-b transition-colors ${
+            isDarkMode ? 'border-gray-700' : 'border-gray-200'
+          }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl">
                   <Heart className="w-5 h-5 text-white fill-current" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-800">{getAppTitle()}</h2>
+                  <h2 className={`text-lg font-bold transition-colors ${
+                    isDarkMode ? 'text-white' : 'text-gray-800'
+                  }`}>{getAppTitle()}</h2>
                   <p className="text-sm text-gray-600">Long Distance Love</p>
                   {user && userProfile && (
                     <p className="text-xs text-pink-600 font-medium">
@@ -493,16 +524,22 @@ function FeedPage() {
                 })}
               </div>
               
-              <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className={`mt-6 pt-4 border-t transition-colors ${
+                isDarkMode ? 'border-gray-700' : 'border-gray-200'
+              }`}>
                 <div className="space-y-2">
                   <button 
                     onClick={() => {
                       setShowHelp(true);
                       setIsMenuOpen(false);
                     }}
-                    className="w-full flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
+                      isDarkMode 
+                        ? 'text-gray-300 hover:bg-gray-700' 
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
                   >
-                    <HelpCircle className="w-4 h-4 text-gray-500" />
+                    <HelpCircle className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                     <span className="text-sm font-medium">Help</span>
                   </button>
                   <button 
@@ -510,15 +547,36 @@ function FeedPage() {
                       setShowFeedback(true);
                       setIsMenuOpen(false);
                     }}
-                    className="w-full flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
+                      isDarkMode 
+                        ? 'text-gray-300 hover:bg-gray-700' 
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
                   >
-                    <MessageSquare className="w-4 h-4 text-gray-500" />
+                    <MessageSquare className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                     <span className="text-sm font-medium">Feedback</span>
+                  </button>
+                  <button 
+                    onClick={() => setIsDarkMode(!isDarkMode)}
+                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
+                      isDarkMode 
+                        ? 'text-gray-300 hover:bg-gray-700' 
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {isDarkMode ? (
+                      <Sun className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                    ) : (
+                      <Moon className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                    )}
+                    <span className="text-sm font-medium">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
                   </button>
                   {user ? (
                     <button 
                       onClick={handleLogout}
-                      className="w-full flex items-center space-x-3 px-3 py-2.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className={`w-full flex items-center space-x-3 px-3 py-2.5 text-red-600 rounded-lg transition-colors ${
+                        isDarkMode ? 'hover:bg-red-900/20' : 'hover:bg-red-50'
+                      }`}
                     >
                       <LogOut className="w-4 h-4 text-red-500" />
                       <span className="text-sm font-medium">Logout</span>
@@ -529,9 +587,13 @@ function FeedPage() {
                         setShowLogin(true);
                         setIsMenuOpen(false);
                       }}
-                      className="w-full flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
+                        isDarkMode 
+                          ? 'text-gray-300 hover:bg-gray-700' 
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
                     >
-                      <LogIn className="w-4 h-4 text-gray-500" />
+                      <LogIn className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                       <span className="text-sm font-medium">Login</span>
                     </button>
                   )}
@@ -548,7 +610,11 @@ function FeedPage() {
       </main>
 
       {/* Bottom Navigation - Mobile Only */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-pink-200 z-30 safe-area-bottom md:hidden">
+      <nav className={`fixed bottom-0 left-0 right-0 backdrop-blur-md border-t z-30 safe-area-bottom md:hidden transition-colors ${
+        isDarkMode 
+          ? 'bg-gray-800/90 border-gray-700' 
+          : 'bg-white/90 border-pink-200'
+      }`}>
         <div className="grid grid-cols-5 gap-1 px-1 py-2">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -558,8 +624,12 @@ function FeedPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex flex-col items-center space-y-1 py-2 px-1 rounded-lg transition-colors ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700'
-                    : 'text-gray-600 hover:text-pink-600'
+                    ? isDarkMode 
+                      ? 'bg-gradient-to-r from-pink-900/30 to-purple-900/30 text-pink-400'
+                      : 'bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700'
+                    : isDarkMode
+                      ? 'text-gray-400 hover:text-pink-400'
+                      : 'text-gray-600 hover:text-pink-600'
                 }`}
               >
                 <Icon className={`w-4 h-4 ${activeTab === tab.id ? tab.color : ''}`} />

@@ -6,7 +6,7 @@ To enable authentication and real-time features, you need to set up a Firebase p
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Click "Create a project" or "Add project"
-3. Enter project name: "Together Apart" (or your preferred name)
+3. Enter project name: "Lovespark" (or your preferred name)
 4. Enable Google Analytics (optional)
 5. Click "Create project"
 
@@ -40,7 +40,7 @@ To enable authentication and real-time features, you need to set up a Firebase p
 1. Go to Project Settings (gear icon) → "General" tab
 2. Scroll down to "Your apps" section
 3. Click "Web" icon (</>) to add a web app
-4. Enter app nickname: "Together Apart Web"
+4. Enter app nickname: "Lovespark Web"
 5. Check "Also set up Firebase Hosting" (optional)
 6. Click "Register app"
 7. Copy the Firebase configuration object

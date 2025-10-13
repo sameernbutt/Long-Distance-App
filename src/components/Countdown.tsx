@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Heart, MapPin, Edit, Plus, X } from 'lucide-react';
+import { Calendar, Heart, MapPin, Edit, Plus, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPartnerId } from '../firebase/moods';
-import { getCoupleReunion, setCoupleReunion, subscribeToReunionChanges, ReunionData } from '../firebase/reunion';
+import { setCoupleReunion, subscribeToReunionChanges, ReunionData } from '../firebase/reunion';
 import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -12,7 +12,11 @@ interface CountdownData {
   location: string;
 }
 
-export default function Countdown() {
+interface CountdownProps {
+  isDarkMode?: boolean;
+}
+
+export default function Countdown({ isDarkMode = false }: CountdownProps) {
   const { user, isGuest } = useAuth();
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [countdownData, setCountdownData] = useState<CountdownData>({
@@ -172,30 +176,56 @@ export default function Countdown() {
   return (
     <div className="p-4 md:p-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Countdown to Reunion</h2>
-        <p className="text-gray-600 text-sm md:text-base">Count down the days until you're together again</p>
+        <h2 className={`text-2xl md:text-3xl font-bold mb-2 transition-colors ${
+          isDarkMode ? 'text-white' : 'text-gray-800'
+        }`}>Countdown to Reunion</h2>
+        <p className={`text-sm md:text-base transition-colors ${
+          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+        }`}>Count down the days until you're together again</p>
       </div>
 
       <div className="max-w-2xl mx-auto">
         {loading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto"></div>
-            <p className="text-gray-600 mt-2">Loading reunion data...</p>
+            <p className={`mt-2 transition-colors ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>Loading reunion data...</p>
           </div>
         ) : isGuest ? (
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+          <div className={`rounded-xl p-6 shadow-lg border text-center transition-colors ${
+            isDarkMode 
+              ? 'bg-gray-800 border-gray-600' 
+              : 'bg-white border-gray-100'
+          }`}>
             <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Sign In to Set Reunions</h3>
-            <p className="text-gray-600">Create an account to set and share countdown timers with your partner</p>
+            <h3 className={`text-lg font-semibold mb-2 transition-colors ${
+              isDarkMode ? 'text-white' : 'text-gray-800'
+            }`}>Sign In to Set Reunions</h3>
+            <p className={`transition-colors ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>Create an account to set and share countdown timers with your partner</p>
           </div>
         ) : !partnerId ? (
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+          <div className={`rounded-xl p-6 shadow-lg border text-center transition-colors ${
+            isDarkMode 
+              ? 'bg-gray-800 border-gray-600' 
+              : 'bg-white border-gray-100'
+          }`}>
             <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Connect with Partner</h3>
-            <p className="text-gray-600">Pair with your partner to set and share reunion countdowns together</p>
+            <h3 className={`text-lg font-semibold mb-2 transition-colors ${
+              isDarkMode ? 'text-white' : 'text-gray-800'
+            }`}>Connect with Partner</h3>
+            <p className={`transition-colors ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>Pair with your partner to set and share reunion countdowns together</p>
           </div>
         ) : !countdownData.date && !isEditing ? (
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+          <div className={`rounded-xl p-6 shadow-lg border text-center transition-colors ${
+            isDarkMode 
+              ? 'bg-gray-800 border-gray-600' 
+              : 'bg-white border-gray-100'
+          }`}>
             <button
               onClick={handleSetReunion}
               className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 transition-all duration-200 font-medium"
@@ -205,12 +235,20 @@ export default function Countdown() {
             </button>
           </div>
         ) : isEditing ? (
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 mb-8">
-            <h3 className="text-xl font-bold text-gray-800 mb-6">Set Your Reunion</h3>
+          <div className={`rounded-xl p-6 shadow-lg border mb-8 transition-colors ${
+            isDarkMode 
+              ? 'bg-gray-800 border-gray-600' 
+              : 'bg-white border-gray-100'
+          }`}>
+            <h3 className={`text-xl font-bold mb-6 transition-colors ${
+              isDarkMode ? 'text-white' : 'text-gray-800'
+            }`}>Set Your Reunion</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium mb-2 transition-colors ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Title
                 </label>
                 <input
@@ -218,24 +256,36 @@ export default function Countdown() {
                   value={editData.title}
                   onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="e.g., Next Meeting, Vacation Together, etc."
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium mb-2 transition-colors ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Date & Time
                 </label>
                 <input
                   type="datetime-local"
                   value={editData.date}
                   onChange={(e) => setEditData(prev => ({ ...prev, date: e.target.value }))}
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-200 text-gray-900'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium mb-2 transition-colors ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Location (optional)
                 </label>
                 <input
@@ -243,7 +293,11 @@ export default function Countdown() {
                   value={editData.location}
                   onChange={(e) => setEditData(prev => ({ ...prev, location: e.target.value }))}
                   placeholder="e.g., Paris, My hometown, etc."
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+                  }`}
                 />
               </div>
             </div>
@@ -263,7 +317,11 @@ export default function Countdown() {
                     setShowSetReunion(false);
                     setEditData(countdownData);
                   }}
-                  className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                  className={`px-6 py-3 rounded-xl transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
                 >
                   Cancel
                 </button>
@@ -274,20 +332,32 @@ export default function Countdown() {
           /* Countdown Display */
           <div className="space-y-6">
             {/* Event Info */}
-            <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl p-6 border border-pink-200 relative">
+            <div className={`rounded-xl p-6 border relative transition-colors ${
+              isDarkMode 
+                ? 'bg-gradient-to-r from-gray-800 to-gray-700 border-gray-600' 
+                : 'bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200'
+            }`}>
               <div className="text-center">
                 <div className="flex items-center justify-between mb-4">
                   <div></div>
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={handleEdit}
-                      className="p-2 text-gray-500 hover:text-pink-600 hover:bg-pink-100 rounded-full transition-colors"
+                      className={`p-2 rounded-full transition-colors ${
+                        isDarkMode 
+                          ? 'text-gray-400 hover:text-pink-400 hover:bg-gray-700' 
+                          : 'text-gray-500 hover:text-pink-600 hover:bg-pink-100'
+                      }`}
                     >
                       <Edit className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => setShowCancelConfirm(true)}
-                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
+                      className={`p-2 rounded-full transition-colors ${
+                        isDarkMode 
+                          ? 'text-gray-400 hover:text-red-400 hover:bg-gray-700' 
+                          : 'text-gray-500 hover:text-red-600 hover:bg-red-100'
+                      }`}
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -295,15 +365,21 @@ export default function Countdown() {
                 </div>
                 
                 <Heart className="w-12 h-12 text-pink-500 fill-current mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">{countdownData.title}</h3>
+                <h3 className={`text-2xl font-bold mb-2 transition-colors ${
+                  isDarkMode ? 'text-white' : 'text-gray-800'
+                }`}>{countdownData.title}</h3>
                 
-                <div className="flex items-center justify-center space-x-2 text-gray-600 mb-2">
+                <div className={`flex items-center justify-center space-x-2 mb-2 transition-colors ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
                   <Calendar className="w-4 h-4" />
                   <span>{formatDate(countdownData.date)}</span>
                 </div>
                 
                 {countdownData.location && (
-                  <div className="flex items-center justify-center space-x-2 text-gray-600">
+                  <div className={`flex items-center justify-center space-x-2 transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
                     <MapPin className="w-4 h-4" />
                     <span>{countdownData.location}</span>
                   </div>
@@ -312,7 +388,11 @@ export default function Countdown() {
             </div>
 
             {/* Countdown Timer */}
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div className={`rounded-xl p-6 shadow-lg border transition-colors ${
+              isDarkMode 
+                ? 'bg-gray-800 border-gray-600' 
+                : 'bg-white border-gray-100'
+            }`}>
               {timeLeft.days > 0 ? (
                 <div className="grid grid-cols-4 gap-4 text-center">
                   {[
@@ -327,7 +407,9 @@ export default function Countdown() {
                       }`}>
                         {item.value.toString().padStart(2, '0')}
                       </div>
-                      <div className="text-sm text-gray-600 uppercase tracking-wide font-medium">
+                      <div className={`text-sm uppercase tracking-wide font-medium transition-colors ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
                         {item.label}
                       </div>
                     </div>
@@ -340,7 +422,9 @@ export default function Countdown() {
                     {timeLeft.minutes.toString().padStart(2, '0')}:
                     {timeLeft.seconds.toString().padStart(2, '0')}
                   </div>
-                  <div className="text-sm text-gray-600 uppercase tracking-wide font-medium">
+                  <div className={`text-sm uppercase tracking-wide font-medium transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
                     Hours : Minutes : Seconds
                   </div>
                 </div>
@@ -349,7 +433,9 @@ export default function Countdown() {
               {timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0 && countdownData.date && (
                 <div className="mt-6 text-center">
                   <div className="text-2xl font-bold text-pink-600 mb-2">🎉 Today's the day! 🎉</div>
-                  <p className="text-gray-600">Hope you have an amazing time together!</p>
+                  <p className={`transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>Hope you have an amazing time together!</p>
                 </div>
               )}
             </div>
@@ -359,13 +445,25 @@ export default function Countdown() {
         {/* Cancel Confirmation Modal */}
         {showCancelConfirm && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl p-6 max-w-md w-full">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Cancel Reunion?</h3>
-              <p className="text-gray-600 mb-6">Are you sure you want to cancel this reunion? This action cannot be undone.</p>
+            <div className={`rounded-xl p-6 max-w-md w-full transition-colors ${
+              isDarkMode 
+                ? 'bg-gray-800 border border-gray-600' 
+                : 'bg-white'
+            }`}>
+              <h3 className={`text-lg font-bold mb-4 transition-colors ${
+                isDarkMode ? 'text-white' : 'text-gray-800'
+              }`}>Cancel Reunion?</h3>
+              <p className={`mb-6 transition-colors ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>Are you sure you want to cancel this reunion? This action cannot be undone.</p>
               <div className="flex space-x-3">
                 <button
                   onClick={() => setShowCancelConfirm(false)}
-                  className="flex-1 py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
                 >
                   Keep Reunion
                 </button>

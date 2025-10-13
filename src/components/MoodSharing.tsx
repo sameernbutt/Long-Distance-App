@@ -4,6 +4,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { shareMood, getPartnerMoods, subscribeToPartnerMoods, getPartnerId } from '../firebase/moods';
 import { getUserProfile } from '../firebase/profile';
 
+interface MoodSharingProps {
+  isDarkMode?: boolean;
+}
+
 interface Mood {
   id: string;
   name: string;
@@ -135,7 +139,7 @@ const moods: Mood[] = [
 ];
 
 
-export default function MoodSharing() {
+export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {}) {
   const { user } = useAuth();
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   // message feature removed — keep history only
@@ -243,13 +247,21 @@ export default function MoodSharing() {
   };
 
   return (
-    <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100">
+    <div className={`rounded-xl p-4 md:p-6 shadow-lg border transition-colors ${
+      isDarkMode 
+        ? 'bg-gray-800 border-gray-700' 
+        : 'bg-white border-gray-100'
+    }`}>
       <div className="text-center mb-6">
         <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full w-fit mx-auto mb-3">
           <Heart className="w-6 h-6 text-white" />
         </div>
-        <h3 className="text-lg font-bold text-gray-800 mb-2">Share Your Mood</h3>
-        <p className="text-sm text-gray-600">Let your partner know how you're feeling today!</p>
+        <h3 className={`text-lg font-bold mb-2 transition-colors ${
+          isDarkMode ? 'text-white' : 'text-gray-800'
+        }`}>Share Your Mood</h3>
+        <p className={`text-sm transition-colors ${
+          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+        }`}>Let your partner know how you're feeling today!</p>
       </div>
 
       {/* Mood Selection */}
@@ -263,7 +275,9 @@ export default function MoodSharing() {
               className={`flex-shrink-0 w-24 p-4 rounded-xl border-2 transition-all duration-200 ${
                 selectedMood === mood.id
                   ? `border-${mood.color.split('-')[1]}-300 ${mood.bgColor}`
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  : isDarkMode 
+                    ? 'border-gray-600 hover:border-gray-500 hover:bg-gray-700'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
               }`}
             >
               <div className="text-3xl mb-2">{mood.emoji}</div>
@@ -278,8 +292,12 @@ export default function MoodSharing() {
 
       {/* Success Message */}
       {isShared && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center space-x-2 text-green-700">
+        <div className={`mb-6 p-4 border rounded-lg transition-colors ${
+          isDarkMode 
+            ? 'bg-green-900/20 border-green-800 text-green-400' 
+            : 'bg-green-50 border-green-200 text-green-700'
+        }`}>
+          <div className="flex items-center space-x-2">
             <Check className="w-5 h-5" />
             <span className="font-medium">Mood shared successfully!</span>
           </div>
@@ -293,35 +311,59 @@ export default function MoodSharing() {
           {/* Your Current Mood - header + stacked emoji + label/time */}
           <div className="flex-1">
             <h5 className="text-xs font-medium text-blue-700 mb-2">Your Mood</h5>
-            <div className="flex items-center justify-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <div className={`flex items-center justify-center p-3 rounded-lg border transition-colors ${
+              isDarkMode 
+                ? 'bg-blue-900/20 border-blue-800' 
+                : 'bg-blue-50 border-blue-200'
+            }`}>
               {moodHistory.length > 0 ? (
                 <div className="flex flex-col items-center">
                   <div className="text-2xl">{moods.find(m => m.name === moodHistory[0].mood)?.emoji || '😊'}</div>
-                  <div className="text-sm font-medium text-gray-800 mt-1">{moodHistory[0].mood}</div>
-                  <div className="text-xs text-gray-500">{formatTime(moodHistory[0].timestamp)}</div>
+                  <div className={`text-sm font-medium mt-1 transition-colors ${
+                    isDarkMode ? 'text-white' : 'text-gray-800'
+                  }`}>{moodHistory[0].mood}</div>
+                  <div className={`text-xs transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>{formatTime(moodHistory[0].timestamp)}</div>
                 </div>
               ) : (
-                <div className="text-sm text-gray-500">Share your mood to get started!</div>
+                <div className={`text-sm transition-colors ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>Share your mood to get started!</div>
               )}
             </div>
           </div>
 
           {/* Partner's Current Mood - header uses partner's name, stacked emoji + label/time */}
           <div className="flex-1">
-            <h5 className="text-xs font-medium text-pink-700 mb-2">{partnerProfile?.displayName || 'Partner'}'s Mood</h5>
-            <div className="flex items-center justify-center p-3 bg-pink-50 rounded-lg border border-pink-200">
+            <h5 className={`text-xs font-medium mb-2 transition-colors ${
+              isDarkMode ? 'text-pink-300' : 'text-pink-700'
+            }`}>{partnerProfile?.displayName || 'Partner'}'s Mood</h5>
+            <div className={`flex items-center justify-center p-3 rounded-lg border transition-colors ${
+              isDarkMode 
+                ? 'bg-gray-800 border-gray-600' 
+                : 'bg-pink-50 border-pink-200'
+            }`}>
               {partnerId ? (
                 partnerMoods.length > 0 ? (
                   <div className="flex flex-col items-center">
                     <div className="text-2xl">{partnerMoods[0].emoji}</div>
-                    <div className="text-sm font-medium text-gray-800 mt-1">{partnerMoods[0].mood}</div>
-                    <div className="text-xs text-gray-500">{formatTime(partnerMoods[0].timestamp)}</div>
+                    <div className={`text-sm font-medium mt-1 transition-colors ${
+                      isDarkMode ? 'text-white' : 'text-gray-800'
+                    }`}>{partnerMoods[0].mood}</div>
+                    <div className={`text-xs transition-colors ${
+                      isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                    }`}>{formatTime(partnerMoods[0].timestamp)}</div>
                   </div>
                 ) : (
-                  <div className="text-sm text-gray-500">No mood shared yet</div>
+                  <div className={`text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>No mood shared yet</div>
                 )
               ) : (
-                <div className="text-sm text-gray-500">Not paired with partner</div>
+                <div className={`text-sm transition-colors ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>Not paired with partner</div>
               )}
             </div>
           </div>

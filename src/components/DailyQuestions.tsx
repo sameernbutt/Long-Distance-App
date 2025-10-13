@@ -6,7 +6,11 @@ import { saveDailyAnswer, getCoupleAnswers, getTodaysDailyQuestion } from '../fi
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
-export default function DailyQuestions() {
+interface DailyQuestionsProps {
+  isDarkMode?: boolean;
+}
+
+export default function DailyQuestions({ isDarkMode = false }: DailyQuestionsProps) {
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [coupleAnswers, setCoupleAnswers] = useState<{ [uid: string]: { answer: string, name: string } }>({});
@@ -100,19 +104,31 @@ export default function DailyQuestions() {
   return (
     <div className="p-4 md:p-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Daily Question</h2>
-        <p className="text-gray-600 text-sm md:text-base">Connect deeper with thoughtful questions</p>
+        <h2 className={`text-2xl md:text-3xl font-bold mb-2 transition-colors ${
+          isDarkMode ? 'text-white' : 'text-gray-800'
+        }`}>Daily Question</h2>
+        <p className={`text-sm md:text-base transition-colors ${
+          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+        }`}>Connect deeper with thoughtful questions</p>
       </div>
 
       <div className="max-w-2xl mx-auto">
-        <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl p-4 md:p-6 mb-6 border border-pink-200">
+        <div className={`rounded-xl p-4 md:p-6 mb-6 border transition-colors ${
+          isDarkMode 
+            ? 'bg-gradient-to-r from-gray-800 to-gray-700 border-gray-600' 
+            : 'bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200'
+        }`}>
           <div className="flex items-start space-x-3 mb-4">
             <div className="p-2 bg-pink-500 rounded-full">
               <MessageCircle className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-800 mb-2">Today's Question</h3>
-              <p className="text-base md:text-lg text-gray-700 leading-relaxed">
+              <h3 className={`font-semibold mb-2 transition-colors ${
+                isDarkMode ? 'text-white' : 'text-gray-800'
+              }`}>Today's Question</h3>
+              <p className={`text-base md:text-lg leading-relaxed transition-colors ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
                 {loading ? 'Loading today\'s question...' : currentQuestion}
               </p>
             </div>
@@ -134,15 +150,25 @@ export default function DailyQuestions() {
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 placeholder="Share your thoughts..."
-                className="w-full p-3 md:p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-sm md:text-base"
+                className={`w-full p-3 md:p-4 border rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-sm md:text-base transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+                }`}
                 rows={4}
               />
               <div className="flex justify-between items-center mt-4">
-                <span className="text-sm text-gray-500">{answer.length}/500 characters</span>
+                <span className={`text-sm transition-colors ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>{answer.length}/500 characters</span>
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => { setEditing(false); setAnswer(coupleAnswers[user?.uid]?.answer || ''); }}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 text-sm"
+                    className={`px-4 py-2 rounded-xl transition-all duration-200 text-sm ${
+                      isDarkMode 
+                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
                   >
                     Cancel
                   </button>
@@ -161,13 +187,27 @@ export default function DailyQuestions() {
 
         {/* Answers Display */}
         {Object.keys(coupleAnswers).length > 0 && (
-          <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100">
-            <h4 className="font-semibold text-gray-800 mb-4">Today's Answers</h4>
+          <div className={`rounded-xl p-4 md:p-6 shadow-lg border transition-colors ${
+            isDarkMode 
+              ? 'bg-gray-800 border-gray-600' 
+              : 'bg-white border-gray-100'
+          }`}>
+            <h4 className={`font-semibold mb-4 transition-colors ${
+              isDarkMode ? 'text-white' : 'text-gray-800'
+            }`}>Today's Answers</h4>
             <div className="space-y-4">
               {Object.entries(coupleAnswers).map(([uid, val]) => (
-                <div key={uid} className="bg-gray-50 rounded-xl p-4 border">
-                  <p className="font-medium text-gray-700 mb-2 text-sm">{val.name}</p>
-                  <p className="text-gray-600 text-sm">{val.answer}</p>
+                <div key={uid} className={`rounded-xl p-4 border transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-700 border-gray-600' 
+                    : 'bg-gray-50 border-gray-200'
+                }`}>
+                  <p className={`font-medium mb-2 text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>{val.name}</p>
+                  <p className={`text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>{val.answer}</p>
                 </div>
               ))}
             </div>
