@@ -130,6 +130,13 @@ service cloud.firestore {
          coupleId.split('_')[1] == request.auth.uid);
     }
     
+    // Couple date nights - readable/writable by both partners
+    match /coupleDateNights/{coupleId} {
+      allow read, write: if request.auth != null && 
+        (coupleId.split('_')[0] == request.auth.uid || 
+         coupleId.split('_')[1] == request.auth.uid);
+    }
+    
     // Notifications - users can read their own notifications and create notifications for their partner
     match /notifications/{notificationId} {
       allow read: if request.auth != null && 
