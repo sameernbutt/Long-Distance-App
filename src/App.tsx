@@ -65,6 +65,46 @@ function AppContent() {
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [sendingNotification, setSendingNotification] = useState(false);
 
+  // Touch events for swipe to close menu
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    
+    if (isLeftSwipe && isMenuOpen) {
+      setIsMenuOpen(false);
+    }
+  };
+
+  // Keyboard support - close menu with Escape key
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
   useEffect(() => {
     const saved = localStorage.getItem('coupleNames');
     if (saved) {
@@ -375,7 +415,7 @@ function FeedPage() {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 text-gray-600 hover:text-pink-600 hover:bg-pink-100 rounded-xl transition-colors"
             >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <Menu className="w-5 h-5" />
             </button>
             
             <div className="flex items-center space-x-3">
@@ -392,31 +432,40 @@ function FeedPage() {
       </header>
 
       {/* Mobile Menu Overlay */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setIsMenuOpen(false)}>
-          <div className="bg-white h-full w-80 max-w-[85vw] shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl">
-                    <Heart className="w-5 h-5 text-white fill-current" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-800">{getAppTitle()}</h2>
-                    <p className="text-sm text-gray-600">Long Distance Love</p>
-                    {user && userProfile && (
-                      <p className="text-xs text-pink-600 font-medium">
-                        Hi {userProfile.displayName}!
-                      </p>
-                    )}
-                  </div>
+      <div className={`fixed inset-0 z-50 transition-all duration-300 ${isMenuOpen ? 'visible' : 'invisible'}`}>
+        {/* Background overlay */}
+        <div 
+          className={`absolute inset-0 bg-black transition-opacity duration-300 ${
+            isMenuOpen ? 'opacity-50' : 'opacity-0'
+          }`}
+          onClick={() => setIsMenuOpen(false)}
+        />
+        
+        {/* Sliding menu */}
+        <div 
+          className={`absolute left-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-xl transform transition-transform duration-300 ease-out ${
+            isMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl">
+                  <Heart className="w-5 h-5 text-white fill-current" />
                 </div>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800">{getAppTitle()}</h2>
+                  <p className="text-sm text-gray-600">Long Distance Love</p>
+                  {user && userProfile && (
+                    <p className="text-xs text-pink-600 font-medium">
+                      Hi {userProfile.displayName}!
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
             
@@ -491,7 +540,7 @@ function FeedPage() {
             </nav>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Main Content */}
       <main className="pb-20 md:pb-6">
