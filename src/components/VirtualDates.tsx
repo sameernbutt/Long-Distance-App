@@ -3,6 +3,7 @@ import { Calendar, Filter, MoreVertical, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPartnerId } from '../firebase/moods';
 import { addBucketListItem, deleteBucketListItem, subscribeToSharedBucketList, BucketListItem } from '../firebase/dates';
+import DateNightCountdown from './DateNightCountdown';
 
 const dateIdeas = [
   {
@@ -151,6 +152,7 @@ export default function VirtualDates() {
             user.uid, 
             partnerIdResult, 
             (items) => {
+              console.log('Bucket list updated:', items);
               setBucketList(items);
               setLoading(false);
             }
@@ -175,9 +177,18 @@ export default function VirtualDates() {
   }, [user]);
 
   const handleAddToBucketList = async (idea: any) => {
-    if (!user?.uid || !userProfile?.displayName) return;
+    console.log('handleAddToBucketList called with:', idea);
+    console.log('User:', user?.uid);
+    console.log('User profile:', userProfile?.displayName);
+    
+    if (!user?.uid || !userProfile?.displayName) {
+      console.log('Missing user data:', { userId: user?.uid, displayName: userProfile?.displayName });
+      alert('Please make sure you are logged in and your profile is loaded.');
+      return;
+    }
 
     try {
+      console.log('Calling addBucketListItem...');
       const { error } = await addBucketListItem(
         user.uid,
         userProfile.displayName,
@@ -186,9 +197,15 @@ export default function VirtualDates() {
       
       if (error) {
         console.error('Error adding to bucket list:', error);
+        alert('Failed to add to bucket list. Please try again.');
+      } else {
+        console.log('Successfully added to bucket list:', idea.title);
+        // The real-time listener will automatically update the bucket list
+        // and the filtered ideas will update to hide this item
       }
     } catch (error) {
       console.error('Error adding to bucket list:', error);
+      alert('Failed to add to bucket list. Please try again.');
     }
     
     setActiveMenuId(null);
@@ -216,24 +233,41 @@ export default function VirtualDates() {
   };
 
   const handleDeleteBucketItem = async (itemId: string) => {
-    if (!user?.uid) return;
+    console.log('handleDeleteBucketItem called with itemId:', itemId);
+    console.log('User:', user?.uid);
+    
+    if (!user?.uid) {
+      console.log('No user ID, cannot delete');
+      return;
+    }
 
     try {
+      console.log('Calling deleteBucketListItem...');
       const { error } = await deleteBucketListItem(itemId, user.uid);
       
       if (error) {
         console.error('Error deleting bucket item:', error);
+        alert('Failed to delete item. Please try again.');
+      } else {
+        console.log('Successfully deleted bucket item:', itemId);
       }
     } catch (error) {
       console.error('Error deleting bucket item:', error);
+      alert('Failed to delete item. Please try again.');
     }
     
     setActiveMenuId(null);
   };
 
-  const filteredIdeas = selectedCategory === "All" 
+  // Check if an idea is already in the bucket list
+  const isIdeaInBucketList = (ideaTitle: string) => {
+    return bucketList.some(item => item.title.toLowerCase() === ideaTitle.toLowerCase());
+  };
+
+  const filteredIdeas = (selectedCategory === "All" 
     ? dateIdeas 
-    : dateIdeas.filter(idea => idea.category === selectedCategory);
+    : dateIdeas.filter(idea => idea.category === selectedCategory))
+    .filter(idea => !isIdeaInBucketList(idea.title));
 
   const handleMenuToggle = (ideaId: string | number) => {
     setActiveMenuId(activeMenuId === ideaId ? null : ideaId);
@@ -241,9 +275,13 @@ export default function VirtualDates() {
 
   // Close menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = () => {
+    const handleClickOutside = (event: MouseEvent) => {
       if (activeMenuId !== null) {
-        setActiveMenuId(null);
+        // Check if the click was inside a menu
+        const target = event.target as Element;
+        if (target && !target.closest('.menu-dropdown')) {
+          setActiveMenuId(null);
+        }
       }
     };
 
@@ -264,6 +302,9 @@ export default function VirtualDates() {
           <p className="text-gray-600 text-sm md:text-base" id="datesDescription">Plan dates and create a bucket list!</p>
         </div>
       )}
+
+      {/* Date Night Countdown */}
+      <DateNightCountdown />
 
       {/* Show authentication or pairing requirement */}
       {!user ? (
@@ -337,9 +378,12 @@ export default function VirtualDates() {
                       </button>
                       
                       {activeMenuId === idea.id && (
-                        <div className="absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10 min-w-[140px]">
+                        <div className="menu-dropdown absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10 min-w-[140px]">
                           <button
-                            onClick={() => handleAddToBucketList(idea)}
+                            onClick={() => {
+                              console.log('Add to Bucket List button clicked for idea:', idea);
+                              handleAddToBucketList(idea);
+                            }}
                             className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                           >
                             <Calendar className="w-4 h-4" />
@@ -447,7 +491,7 @@ export default function VirtualDates() {
                     </button>
                     
                     {activeMenuId === `bucket-${item.id}` && (
-                      <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10 min-w-[120px]">
+                      <div className="menu-dropdown absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10 min-w-[120px]">
                         <button
                           onClick={() => {
                             // Edit functionality - could open a modal or inline edit
@@ -460,7 +504,10 @@ export default function VirtualDates() {
                           <span>Edit</span>
                         </button>
                         <button
-                          onClick={() => handleDeleteBucketItem(item.id)}
+                          onClick={() => {
+                            console.log('Delete bucket item clicked:', item);
+                            handleDeleteBucketItem(item.id);
+                          }}
                           className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                         >
                           <Trash2 className="w-4 h-4" />

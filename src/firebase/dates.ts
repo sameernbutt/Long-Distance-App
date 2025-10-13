@@ -11,7 +11,8 @@ import {
   arrayUnion,
   arrayRemove,
   onSnapshot,
-  getDoc
+  getDoc,
+  setDoc
 } from 'firebase/firestore';
 import { db } from './config';
 
@@ -38,6 +39,17 @@ export interface BucketListItem {
   completed: boolean;
   completedAt?: number;
   createdAt: number;
+}
+
+export interface DateNight {
+  id: string;
+  coupleId: string;
+  activity: string;
+  datetime: string; // ISO string for date and time
+  setBy: string;
+  setByName: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 // Add custom date idea
@@ -174,6 +186,7 @@ export const addBucketListItem = async (
   title: string
 ) => {
   try {
+    console.log('Adding bucket list item:', { userId, userName, title });
     const bucketItem: Omit<BucketListItem, 'id'> = {
       userId,
       userName,
@@ -182,9 +195,12 @@ export const addBucketListItem = async (
       createdAt: Date.now()
     };
     
+    console.log('Bucket item to add:', bucketItem);
     const docRef = await addDoc(collection(db, 'bucketList'), bucketItem);
+    console.log('Bucket item added with ID:', docRef.id);
     return { id: docRef.id, error: null };
   } catch (error: any) {
+    console.error('Error adding bucket list item:', error);
     return { id: null, error: error.message };
   }
 };
@@ -247,22 +263,28 @@ export const updateBucketListItem = async (
 // Delete bucket list item
 export const deleteBucketListItem = async (itemId: string, userId: string) => {
   try {
+    console.log('Deleting bucket list item:', { itemId, userId });
     const itemRef = doc(db, 'bucketList', itemId);
     
     // Check if user owns this item
     const itemDoc = await getDoc(itemRef);
     if (itemDoc.exists()) {
       const item = itemDoc.data() as BucketListItem;
+      console.log('Found item to delete:', item);
       if (item.userId === userId) {
         await deleteDoc(itemRef);
+        console.log('Successfully deleted item:', itemId);
         return { error: null };
       } else {
+        console.log('User not authorized to delete item:', { itemUserId: item.userId, requestUserId: userId });
         return { error: 'Not authorized to delete this item' };
       }
     }
     
+    console.log('Item not found:', itemId);
     return { error: 'Item not found' };
   } catch (error: any) {
+    console.error('Error in deleteBucketListItem:', error);
     return { error: error.message };
   }
 };
@@ -281,10 +303,89 @@ export const subscribeToSharedBucketList = (
   );
   
   return onSnapshot(q, (querySnapshot) => {
+    console.log('Bucket list query snapshot received, size:', querySnapshot.size);
     const items: BucketListItem[] = [];
     querySnapshot.forEach((doc) => {
-      items.push({ id: doc.id, ...doc.data() } as BucketListItem);
+      const item = { id: doc.id, ...doc.data() } as BucketListItem;
+      console.log('Bucket list item:', item);
+      items.push(item);
     });
+    console.log('Final bucket list items:', items);
     callback(items);
+  }, (error) => {
+    console.error('Error in bucket list subscription:', error);
   });
+};
+
+// Date Night Functions
+
+// Get couple date night
+export const getCoupleDateNight = async (userId: string, partnerId: string): Promise<DateNight | null> => {
+  try {
+    const coupleId = [userId, partnerId].sort().join('_');
+    const dateNightDoc = await getDoc(doc(db, 'coupleDateNights', coupleId));
+    return dateNightDoc.exists() ? { id: dateNightDoc.id, ...dateNightDoc.data() } as DateNight : null;
+  } catch (error) {
+    console.error('Error getting couple date night:', error);
+    return null;
+  }
+};
+
+// Set couple date night
+export const setCoupleDateNight = async (
+  userId: string,
+  partnerId: string,
+  userName: string,
+  dateNightData: { activity: string; datetime: string }
+) => {
+  try {
+    const coupleId = [userId, partnerId].sort().join('_');
+    const data: Omit<DateNight, 'id'> = {
+      coupleId,
+      ...dateNightData,
+      setBy: userId,
+      setByName: userName,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    
+    await setDoc(doc(db, 'coupleDateNights', coupleId), data);
+    return { success: true };
+  } catch (error) {
+    console.error('Error setting couple date night:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// Listen to couple date night changes (real-time sync)
+export const subscribeToDateNightChanges = (
+  userId: string,
+  partnerId: string,
+  callback: (dateNight: DateNight | null) => void
+) => {
+  const coupleId = [userId, partnerId].sort().join('_');
+  const dateNightRef = doc(db, 'coupleDateNights', coupleId);
+  
+  return onSnapshot(dateNightRef, (doc) => {
+    if (doc.exists()) {
+      callback({ id: doc.id, ...doc.data() } as DateNight);
+    } else {
+      callback(null);
+    }
+  }, (error) => {
+    console.error('Error listening to date night changes:', error);
+    callback(null);
+  });
+};
+
+// Delete couple date night
+export const deleteCoupleDateNight = async (userId: string, partnerId: string) => {
+  try {
+    const coupleId = [userId, partnerId].sort().join('_');
+    await deleteDoc(doc(db, 'coupleDateNights', coupleId));
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting couple date night:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 };
