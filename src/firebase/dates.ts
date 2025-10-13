@@ -35,7 +35,6 @@ export interface BucketListItem {
   userId: string;
   userName: string;
   title: string;
-  description?: string;
   completed: boolean;
   completedAt?: number;
   createdAt: number;
@@ -172,15 +171,13 @@ export const deleteDateIdea = async (dateId: string, userId: string) => {
 export const addBucketListItem = async (
   userId: string,
   userName: string,
-  title: string,
-  description?: string
+  title: string
 ) => {
   try {
     const bucketItem: Omit<BucketListItem, 'id'> = {
       userId,
       userName,
       title,
-      description,
       completed: false,
       createdAt: Date.now()
     };
@@ -219,7 +216,7 @@ export const getSharedBucketList = async (userId: string, partnerId: string) => 
 export const updateBucketListItem = async (
   itemId: string,
   userId: string,
-  updates: Partial<Pick<BucketListItem, 'title' | 'description' | 'completed'>>
+  updates: Partial<Pick<BucketListItem, 'title' | 'completed'>>
 ) => {
   try {
     const itemRef = doc(db, 'bucketList', itemId);
