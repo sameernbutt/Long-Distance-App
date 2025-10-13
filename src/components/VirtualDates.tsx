@@ -181,8 +181,7 @@ export default function VirtualDates() {
       const { error } = await addBucketListItem(
         user.uid,
         userProfile.displayName,
-        idea.title,
-        idea.description
+        idea.title
       );
       
       if (error) {
