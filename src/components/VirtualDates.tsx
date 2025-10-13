@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Filter, MoreVertical, Trash2 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { getPartnerId } from '../firebase/moods';
+import { addBucketListItem, deleteBucketListItem, subscribeToSharedBucketList, BucketListItem } from '../firebase/dates';
 
 const dateIdeas = [
   {
@@ -115,51 +118,117 @@ const dateIdeas = [
 const categories = ["All", "Entertainment", "Food & Drink", "Culture", "Gaming", "Romance", "Learning", "Activity", "Simple", "Creative", "Fitness"];
 
 export default function VirtualDates() {
+  const { user, userProfile } = useAuth();
   const [showDateIdeas, setShowDateIdeas] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [activeMenuId, setActiveMenuId] = useState<string | number | null>(null);
+  const [partnerId, setPartnerId] = useState<string | null>(null);
   
-  // Bucket list state
-  const [bucketList, setBucketList] = useState<Array<{id: number, title: string, emoji: string, addedBy: string}>>(() => {
-    const saved = localStorage.getItem('bucketList');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Bucket list state - now using Firebase
+  const [bucketList, setBucketList] = useState<BucketListItem[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState({ title: '', emoji: '🎉' });
+  const [loading, setLoading] = useState(true);
 
-  const handleAddToBucketList = (idea: any) => {
-    const newBucketItem = {
-      id: Date.now(),
-      title: idea.title,
-      emoji: idea.icon,
-      addedBy: 'You'
+  // Load partner ID and bucket list with real-time sync
+  useEffect(() => {
+    let unsubscribe: (() => void) | null = null;
+
+    const loadData = async () => {
+      if (!user?.uid) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Get partner ID
+        const partnerIdResult = await getPartnerId(user.uid);
+        setPartnerId(partnerIdResult);
+
+        // Set up real-time subscription for bucket list
+        if (partnerIdResult) {
+          unsubscribe = subscribeToSharedBucketList(
+            user.uid, 
+            partnerIdResult, 
+            (items) => {
+              setBucketList(items);
+              setLoading(false);
+            }
+          );
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setLoading(false);
+      }
     };
-    const updatedBucketList = [...bucketList, newBucketItem];
-    setBucketList(updatedBucketList);
-    localStorage.setItem('bucketList', JSON.stringify(updatedBucketList));
+
+    loadData();
+    
+    // Cleanup subscription on component unmount
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [user]);
+
+  const handleAddToBucketList = async (idea: any) => {
+    if (!user?.uid || !userProfile?.displayName) return;
+
+    try {
+      const { error } = await addBucketListItem(
+        user.uid,
+        userProfile.displayName,
+        idea.title,
+        idea.description
+      );
+      
+      if (error) {
+        console.error('Error adding to bucket list:', error);
+      }
+    } catch (error) {
+      console.error('Error adding to bucket list:', error);
+    }
+    
     setActiveMenuId(null);
   };
 
-  const handleAddCustomItem = () => {
-    if (!newItem.title.trim()) return;
+  const handleAddCustomItem = async () => {
+    if (!newItem.title.trim() || !user?.uid || !userProfile?.displayName) return;
     
-    const newBucketItem = {
-      id: Date.now(),
-      title: newItem.title,
-      emoji: newItem.emoji,
-      addedBy: 'You'
-    };
-    const updatedBucketList = [...bucketList, newBucketItem];
-    setBucketList(updatedBucketList);
-    localStorage.setItem('bucketList', JSON.stringify(updatedBucketList));
-    setNewItem({ title: '', emoji: '🎉' });
-    setShowAddForm(false);
+    try {
+      const { error } = await addBucketListItem(
+        user.uid,
+        userProfile.displayName,
+        newItem.title
+      );
+      
+      if (!error) {
+        setNewItem({ title: '', emoji: '🎉' });
+        setShowAddForm(false);
+      } else {
+        console.error('Error adding custom item:', error);
+      }
+    } catch (error) {
+      console.error('Error adding custom item:', error);
+    }
   };
 
-  const handleDeleteBucketItem = (itemId: number) => {
-    const updatedBucketList = bucketList.filter(item => item.id !== itemId);
-    setBucketList(updatedBucketList);
-    localStorage.setItem('bucketList', JSON.stringify(updatedBucketList));
+  const handleDeleteBucketItem = async (itemId: string) => {
+    if (!user?.uid) return;
+
+    try {
+      const { error } = await deleteBucketListItem(itemId, user.uid);
+      
+      if (error) {
+        console.error('Error deleting bucket item:', error);
+      }
+    } catch (error) {
+      console.error('Error deleting bucket item:', error);
+    }
+    
     setActiveMenuId(null);
   };
 
@@ -197,7 +266,25 @@ export default function VirtualDates() {
         </div>
       )}
 
-      {showDateIdeas ? (
+      {/* Show authentication or pairing requirement */}
+      {!user ? (
+        <div className="max-w-md mx-auto bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+          <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Sign In Required</h3>
+          <p className="text-gray-600">Sign in to create and sync your bucket list with your partner</p>
+        </div>
+      ) : !partnerId && !loading ? (
+        <div className="max-w-md mx-auto bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+          <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Partner Required</h3>
+          <p className="text-gray-600">Pair with your partner to create and share a bucket list together</p>
+        </div>
+      ) : loading ? (
+        <div className="max-w-md mx-auto bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+          <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">Loading your bucket list...</p>
+        </div>
+      ) : showDateIdeas ? (
         // Date Ideas Subpage
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col items-center mb-6 space-y-3">
@@ -346,10 +433,10 @@ export default function VirtualDates() {
               {bucketList.map(item => (
                 <div key={item.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-100">
                   <div className="flex items-center space-x-3">
-                    <span className="text-lg">{item.emoji}</span>
+                    <span className="text-lg">📝</span>
                     <div>
                       <p className="font-medium text-gray-800 text-sm">{item.title}</p>
-                      <p className="text-xs text-gray-500">Added by {item.addedBy}</p>
+                      <p className="text-xs text-gray-500">Added by {item.userName}</p>
                     </div>
                   </div>
                   <div className="relative">

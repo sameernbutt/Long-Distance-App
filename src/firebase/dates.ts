@@ -9,7 +9,9 @@ import {
   doc,
   updateDoc,
   arrayUnion,
-  arrayRemove
+  arrayRemove,
+  onSnapshot,
+  getDoc
 } from 'firebase/firestore';
 import { db } from './config';
 
@@ -227,7 +229,7 @@ export const updateBucketListItem = async (
     if (itemDoc.exists()) {
       const item = itemDoc.data() as BucketListItem;
       if (item.userId === userId) {
-        const updateData = { ...updates };
+        const updateData: any = { ...updates };
         if (updates.completed && !item.completed) {
           updateData.completedAt = Date.now();
         }
@@ -266,4 +268,26 @@ export const deleteBucketListItem = async (itemId: string, userId: string) => {
   } catch (error: any) {
     return { error: error.message };
   }
+};
+
+// Real-time subscription for shared bucket list
+export const subscribeToSharedBucketList = (
+  userId: string,
+  partnerId: string,
+  callback: (items: BucketListItem[]) => void
+) => {
+  const bucketRef = collection(db, 'bucketList');
+  const q = query(
+    bucketRef,
+    where('userId', 'in', [userId, partnerId]),
+    orderBy('createdAt', 'desc')
+  );
+  
+  return onSnapshot(q, (querySnapshot) => {
+    const items: BucketListItem[] = [];
+    querySnapshot.forEach((doc) => {
+      items.push({ id: doc.id, ...doc.data() } as BucketListItem);
+    });
+    callback(items);
+  });
 };
