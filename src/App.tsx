@@ -576,8 +576,8 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
                         activeTab === tab.id
                           ? 'bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700'
-                          : 'text-white hover:bg-gray-100'
-                      }`}
+                          : 'text-black hover:bg-gray-100'
+                      } ${isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'}`}
                     >
                       <Icon className={`w-4 h-4 ${activeTab === tab.id ? tab.color : 'text-gray-500'}`} />
                       <span className="text-sm font-medium">{tab.label}</span>
