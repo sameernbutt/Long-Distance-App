@@ -5,6 +5,10 @@ import { getPartnerId } from '../firebase/moods';
 import { addBucketListItem, deleteBucketListItem, subscribeToSharedBucketList, BucketListItem } from '../firebase/dates';
 import DateNightCountdown from './DateNightCountdown';
 
+interface VirtualDatesProps {
+  isDarkMode?: boolean;
+}
+
 const dateIdeas = [
   {
     id: 1,
@@ -118,7 +122,11 @@ const dateIdeas = [
 
 const categories = ["All", "Entertainment", "Food & Drink", "Culture", "Gaming", "Romance", "Learning", "Activity", "Simple", "Creative", "Fitness"];
 
-export default function VirtualDates() {
+interface VirtualDatesProps {
+  isDarkMode?: boolean;
+}
+
+export default function VirtualDates({ isDarkMode = false }: VirtualDatesProps) {
   const { user, userProfile } = useAuth();
   const [showDateIdeas, setShowDateIdeas] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -294,44 +302,90 @@ export default function VirtualDates() {
     };
   }, [activeMenuId]);
 
+  const getCategoryColorDark = (category: string): string => {
+    const colors = {
+      'Entertainment': 'bg-purple-600 border-purple-400 text-white',
+      'Food & Drink': 'bg-orange-600 border-orange-400 text-white',
+      'Culture': 'bg-indigo-600 border-indigo-400 text-white',
+      'Learning': 'bg-green-600 border-green-400 text-white',
+      'Active': 'bg-red-600 border-red-400 text-white',
+      'Creative': 'bg-pink-600 border-pink-400 text-white',
+      'Adventure': 'bg-yellow-600 border-yellow-400 text-white',
+      'Romance': 'bg-rose-600 border-rose-400 text-white'
+    };
+    return colors[category as keyof typeof colors] || 'bg-gray-600 border-gray-400 text-white';
+  };
+
   return (
     <div className="p-4 md:p-6">
       {!showDateIdeas && (
         <div className="text-center mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2" id="datesTitle">Dates</h2>
-          <p className="text-gray-600 text-sm md:text-base" id="datesDescription">Plan dates and create a bucket list!</p>
+          <h2 className={`text-2xl md:text-3xl font-bold mb-2 transition-colors ${
+            isDarkMode ? 'text-white' : 'text-gray-800'
+          }`} id="datesTitle">Dates</h2>
+          <p className={`text-sm md:text-base transition-colors ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+          }`} id="datesDescription">Plan dates and create a bucket list!</p>
         </div>
       )}
 
       {/* Date Night Countdown */}
-      <DateNightCountdown />
+      <DateNightCountdown isDarkMode={isDarkMode} />
 
       {/* Show authentication or pairing requirement */}
       {!user ? (
-        <div className="max-w-md mx-auto bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+        <div className={`max-w-md mx-auto rounded-xl p-6 shadow-lg border text-center transition-colors ${
+          isDarkMode 
+            ? 'bg-gray-900 border-gray-600' 
+            : 'bg-white border-gray-100'
+        }`}>
           <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Sign In Required</h3>
-          <p className="text-gray-600">Sign in to create and sync your bucket list with your partner</p>
+          <h3 className={`text-lg font-semibold mb-2 transition-colors ${
+            isDarkMode ? 'text-white' : 'text-gray-800'
+          }`}>Sign In Required</h3>
+          <p className={`transition-colors ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>Sign in to create and sync your bucket list with your partner</p>
         </div>
       ) : !partnerId && !loading ? (
-        <div className="max-w-md mx-auto bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+        <div className={`max-w-md mx-auto rounded-xl p-6 shadow-lg border text-center transition-colors ${
+          isDarkMode 
+            ? 'bg-gray-900 border-gray-600' 
+            : 'bg-white border-gray-100'
+        }`}>
           <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Partner Required</h3>
-          <p className="text-gray-600">Pair with your partner to create and share a bucket list together</p>
+          <h3 className={`text-lg font-semibold mb-2 transition-colors ${
+            isDarkMode ? 'text-white' : 'text-gray-800'
+          }`}>Partner Required</h3>
+          <p className={`transition-colors ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>Pair with your partner to create and share a bucket list together</p>
         </div>
       ) : loading ? (
-        <div className="max-w-md mx-auto bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center">
+        <div className={`max-w-md mx-auto rounded-xl p-6 shadow-lg border text-center transition-colors ${
+          isDarkMode 
+            ? 'bg-gray-900 border-gray-600' 
+            : 'bg-white border-gray-100'
+        }`}>
           <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">Loading your bucket list...</p>
+          <p className={`transition-colors ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>Loading your bucket list...</p>
         </div>
       ) : showDateIdeas ? (
         // Date Ideas Subpage
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col items-center mb-6 space-y-3">
-            <h3 className="text-xl font-bold text-gray-800">Browse Date Ideas</h3>
+            <h3 className={`text-xl font-bold transition-colors ${
+              isDarkMode ? 'text-white' : 'text-gray-800'
+            }`}>Browse Date Ideas</h3>
             <button
               onClick={() => setShowDateIdeas(false)}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                isDarkMode 
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
             >
               Back to Bucket List
             </button>
@@ -341,8 +395,12 @@ export default function VirtualDates() {
           {/* Category Filter */}
           <div className="mb-8">
             <div className="flex items-center space-x-2 mb-4">
-              <Filter className="w-5 h-5 text-gray-600" />
-              <h4 className="font-semibold text-gray-800">Filter by Category</h4>
+              <Filter className={`w-5 h-5 transition-colors ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`} />
+              <h4 className={`font-semibold transition-colors ${
+                isDarkMode ? 'text-white' : 'text-gray-800'
+              }`}>Filter by Category</h4>
             </div>
             <div className="flex flex-wrap gap-2">
               {categories.map(category => (
@@ -352,7 +410,9 @@ export default function VirtualDates() {
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                     selectedCategory === category
                       ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : isDarkMode 
+                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {category}
@@ -364,7 +424,11 @@ export default function VirtualDates() {
           {/* Date Ideas Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredIdeas.map(idea => (
-              <div key={idea.id} className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-200 relative">
+              <div key={idea.id} className={`rounded-xl p-6 shadow-lg border hover:shadow-xl transition-all duration-200 relative ${
+                isDarkMode 
+                  ? getCategoryColorDark(idea.category) + ' border-opacity-50' 
+                  : 'bg-white border-gray-100'
+              }`}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="text-3xl">{idea.icon}</div>
                   <div className="flex items-center space-x-2">
@@ -372,19 +436,31 @@ export default function VirtualDates() {
                     <div className="relative">
                       <button
                         onClick={() => handleMenuToggle(idea.id)}
-                        className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                        className={`p-2 rounded-full transition-colors ${
+                          isDarkMode ? 'hover:bg-white/20' : 'hover:bg-gray-100'
+                        }`}
                       >
-                        <MoreVertical className="w-5 h-5 text-gray-400" />
+                        <MoreVertical className={`w-5 h-5 ${
+                          isDarkMode ? 'text-white/70' : 'text-gray-400'
+                        }`} />
                       </button>
                       
                       {activeMenuId === idea.id && (
-                        <div className="menu-dropdown absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10 min-w-[140px]">
+                        <div className={`menu-dropdown absolute right-0 top-10 rounded-lg shadow-lg border py-2 z-10 min-w-[140px] transition-colors ${
+                          isDarkMode 
+                            ? 'bg-gray-700 border-gray-600' 
+                            : 'bg-white border-gray-200'
+                        }`}>
                           <button
                             onClick={() => {
                               console.log('Add to Bucket List button clicked for idea:', idea);
                               handleAddToBucketList(idea);
                             }}
-                            className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            className={`w-full flex items-center space-x-2 px-4 py-2 text-sm transition-colors ${
+                              isDarkMode 
+                                ? 'text-gray-200 hover:bg-gray-600' 
+                                : 'text-gray-700 hover:bg-gray-50'
+                            }`}
                           >
                             <Calendar className="w-4 h-4" />
                             <span>Add to Bucket List</span>
@@ -395,10 +471,18 @@ export default function VirtualDates() {
                   </div>
                 </div>
 
-                <p className="text-gray-600 mb-4 text-sm leading-relaxed">{idea.description}</p>
+                <p className={`mb-4 text-sm leading-relaxed transition-colors ${
+                  isDarkMode ? 'text-white/80' : 'text-gray-600'
+                }`}>{idea.description}</p>
 
-                <div className="pt-2 border-t border-gray-100">
-                  <span className="inline-block px-3 py-1 bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700 rounded-full text-xs font-medium">
+                <div className={`pt-2 border-t transition-colors ${
+                  isDarkMode ? 'border-white/20' : 'border-gray-100'
+                }`}>
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    isDarkMode 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700'
+                  }`}>
                     {idea.category}
                   </span>
                 </div>
@@ -409,7 +493,9 @@ export default function VirtualDates() {
           {filteredIdeas.length === 0 && (
             <div className="text-center py-12">
               <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No date ideas found in this category</p>
+              <p className={`transition-colors ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}>No date ideas found in this category</p>
             </div>
           )}
         </div>
@@ -417,15 +503,27 @@ export default function VirtualDates() {
         // Main Bucket List View
         <div className="max-w-4xl mx-auto">
           {/* Bucket List Section */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 md:p-6 border border-blue-200 mb-6">
+          <div className={`rounded-xl p-4 md:p-6 border mb-6 transition-colors ${
+            isDarkMode 
+              ? 'bg-black border-blue-400 text-blue-100' 
+              : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+          }`}>
             <div className="flex flex-col items-center justify-center mb-4 space-y-3">
               <div className="flex items-center space-x-2">
-                <Calendar className="w-5 h-5 text-blue-500" />
-                <h3 className="text-lg md:text-xl font-bold text-gray-800">Bucket List</h3>
+                <Calendar className={`w-5 h-5 ${
+                  isDarkMode ? 'text-blue-100' : 'text-blue-500'
+                }`} />
+                <h3 className={`text-lg md:text-xl font-bold transition-colors ${
+                  isDarkMode ? 'text-blue-100' : 'text-gray-800'
+                }`}>Bucket List</h3>
               </div>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                  isDarkMode 
+                    ? 'bg-blue-700 text-white hover:bg-blue-600' 
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                }`}
               >
                 Add Item
               </button>
@@ -435,14 +533,22 @@ export default function VirtualDates() {
             
             {/* Add Item Form */}
             {showAddForm && (
-              <div className="mb-4 p-4 bg-white rounded-lg border border-blue-100">
+              <div className={`mb-4 p-4 rounded-lg border transition-colors ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600' 
+                  : 'bg-white border-blue-100'
+              }`}>
                 <div className="space-y-3">
                   <div className="flex space-x-2">
                     <input
                       type="text"
                       value={newItem.emoji}
                       onChange={(e) => setNewItem(prev => ({ ...prev, emoji: e.target.value }))}
-                      className="w-16 px-3 py-2 border border-gray-200 rounded-lg text-center text-lg"
+                      className={`w-16 px-3 py-2 border rounded-lg text-center text-lg transition-colors ${
+                        isDarkMode 
+                          ? 'bg-gray-600 border-gray-500 text-white' 
+                          : 'bg-white border-gray-200 text-gray-900'
+                      }`}
                       placeholder="🎉"
                     />
                     <input
@@ -450,19 +556,31 @@ export default function VirtualDates() {
                       value={newItem.title}
                       onChange={(e) => setNewItem(prev => ({ ...prev, title: e.target.value }))}
                       placeholder="Describe the date activity..."
-                      className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-colors ${
+                        isDarkMode 
+                          ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+                      }`}
                     />
                   </div>
                   <div className="flex space-x-2">
                     <button
                       onClick={handleAddCustomItem}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                      className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                        isDarkMode 
+                          ? 'bg-white text-blue-600 hover:bg-gray-100' 
+                          : 'bg-blue-500 text-white hover:bg-blue-600'
+                      }`}
                     >
                       Add to List
                     </button>
                     <button
                       onClick={() => setShowAddForm(false)}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                      className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                        isDarkMode 
+                          ? 'bg-gray-600 text-gray-300 hover:bg-gray-500' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
                     >
                       Cancel
                     </button>

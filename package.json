@@ -1,9 +1,9 @@
 {
-    "name": "together-apart",
+    "name": "lovespark",
     "private": true,
     "version": "1.0.0",
     "type": "module",
-    "description": "A mobile app for long distance relationships - helping couples stay connected across the miles",
+    "description": "Lovespark - A mobile app for long distance relationships, helping couples stay connected across the miles",
     "keywords": [
         "long-distance",
         "relationship",
