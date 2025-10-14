@@ -7,6 +7,7 @@ export interface UserProfile {
   location: string;
   email?: string;
   photoURL?: string;
+  isDarkMode?: boolean;
 }
 
 export interface CoupleAnniversary {
@@ -111,5 +112,31 @@ export const deleteUserAccount = async (userId: string) => {
   } catch (error) {
     console.error('Error deleting user account:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// Save dark mode preference
+export const saveDarkModePreference = async (userId: string, isDarkMode: boolean) => {
+  try {
+    await updateDoc(doc(db, 'users', userId), { isDarkMode });
+    return { success: true };
+  } catch (error) {
+    console.error('Error saving dark mode preference:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// Get dark mode preference
+export const getDarkModePreference = async (userId: string): Promise<boolean | null> => {
+  try {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      return userData.isDarkMode ?? null; // Return null if not set, false/true if set
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting dark mode preference:', error);
+    return null;
   }
 };

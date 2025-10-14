@@ -195,7 +195,7 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
         ) : isGuest ? (
           <div className={`rounded-xl p-6 shadow-lg border text-center transition-colors ${
             isDarkMode 
-              ? 'bg-gray-800 border-gray-600' 
+              ? 'bg-gray-900 border-gray-600' 
               : 'bg-white border-gray-100'
           }`}>
             <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -209,7 +209,7 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
         ) : !partnerId ? (
           <div className={`rounded-xl p-6 shadow-lg border text-center transition-colors ${
             isDarkMode 
-              ? 'bg-gray-800 border-gray-600' 
+              ? 'bg-gray-900 border-gray-600' 
               : 'bg-white border-gray-100'
           }`}>
             <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -223,7 +223,7 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
         ) : !countdownData.date && !isEditing ? (
           <div className={`rounded-xl p-6 shadow-lg border text-center transition-colors ${
             isDarkMode 
-              ? 'bg-gray-800 border-gray-600' 
+              ? 'bg-gray-900 border-gray-600' 
               : 'bg-white border-gray-100'
           }`}>
             <button
@@ -237,7 +237,7 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
         ) : isEditing ? (
           <div className={`rounded-xl p-6 shadow-lg border mb-8 transition-colors ${
             isDarkMode 
-              ? 'bg-gray-800 border-gray-600' 
+              ? 'bg-gray-900 border-gray-600' 
               : 'bg-white border-gray-100'
           }`}>
             <h3 className={`text-xl font-bold mb-6 transition-colors ${
@@ -390,7 +390,7 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
             {/* Countdown Timer */}
             <div className={`rounded-xl p-6 shadow-lg border transition-colors ${
               isDarkMode 
-                ? 'bg-gray-800 border-gray-600' 
+                ? 'bg-gray-900 border-gray-600' 
                 : 'bg-white border-gray-100'
             }`}>
               {timeLeft.days > 0 ? (
@@ -447,7 +447,7 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
             <div className={`rounded-xl p-6 max-w-md w-full transition-colors ${
               isDarkMode 
-                ? 'bg-gray-800 border border-gray-600' 
+                ? 'bg-gray-900 border border-gray-600' 
                 : 'bg-white'
             }`}>
               <h3 className={`text-lg font-bold mb-4 transition-colors ${

@@ -115,7 +115,7 @@ export default function DailyQuestions({ isDarkMode = false }: DailyQuestionsPro
       <div className="max-w-2xl mx-auto">
         <div className={`rounded-xl p-4 md:p-6 mb-6 border transition-colors ${
           isDarkMode 
-            ? 'bg-gradient-to-r from-gray-800 to-gray-700 border-gray-600' 
+            ? 'bg-gray-900' 
             : 'bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200'
         }`}>
           <div className="flex items-start space-x-3 mb-4">
@@ -189,7 +189,7 @@ export default function DailyQuestions({ isDarkMode = false }: DailyQuestionsPro
         {Object.keys(coupleAnswers).length > 0 && (
           <div className={`rounded-xl p-4 md:p-6 shadow-lg border transition-colors ${
             isDarkMode 
-              ? 'bg-gray-800 border-gray-600' 
+              ? 'bg-gray-900 border-gray-600' 
               : 'bg-white border-gray-100'
           }`}>
             <h4 className={`font-semibold mb-4 transition-colors ${

@@ -42,6 +42,7 @@ import { db } from './firebase/config';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { signOutUser } from './firebase/auth';
 import { requestNotificationPermission, sendThinkingOfYouNotification } from './firebase/messaging';
+import { saveDarkModePreference, getDarkModePreference } from './firebase/profile';
 
 type TabType = 'home' | 'activities' | 'profile' | 'feed' | 'dates';
 
@@ -155,6 +156,55 @@ function AppContent() {
     }
   }, []);
 
+  // Load dark mode preference when user logs in
+  useEffect(() => {
+    const loadDarkModePreference = async () => {
+      if (user?.uid) {
+        try {
+          const preference = await getDarkModePreference(user.uid);
+          if (preference !== null) {
+            setIsDarkMode(preference);
+            // Update theme color for mobile status bar
+            const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+            if (themeColorMeta) {
+              themeColorMeta.setAttribute('content', preference ? '#000000' : '#ffffff');
+            }
+          }
+        } catch (error) {
+          console.error('Error loading dark mode preference:', error);
+        }
+      } else {
+        // For guests, set theme color based on current dark mode state
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeColorMeta) {
+          themeColorMeta.setAttribute('content', isDarkMode ? '#000000' : '#ffffff');
+        }
+      }
+    };
+
+    loadDarkModePreference();
+  }, [user?.uid, isDarkMode]);
+
+  // Save dark mode preference when it changes
+  const handleDarkModeToggle = async () => {
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    
+    // Update theme color for mobile status bar
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute('content', newDarkMode ? '#000000' : '#ffffff');
+    }
+    
+    if (user?.uid) {
+      try {
+        await saveDarkModePreference(user.uid, newDarkMode);
+      } catch (error) {
+        console.error('Error saving dark mode preference:', error);
+      }
+    }
+  };
+
   // Request notification permission
   const requestPermission = async () => {
     try {
@@ -209,12 +259,15 @@ function AppContent() {
   // Show loading screen while checking authentication (only briefly)
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 flex items-center justify-center">
+      // <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center transition-colors ${
+        isDarkMode ? 'bg-black' : 'bg-white'
+      }`}>
         <div className="text-center">
           <div className="p-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full w-fit mx-auto mb-4 animate-pulse">
             <Heart className="w-8 h-8 text-white fill-current" />
           </div>
-          <p className="text-gray-600">Loading...</p>
+          {/* <p className="text-gray-600">Loading...</p> */}
         </div>
       </div>
     );
@@ -252,12 +305,16 @@ function AppContent() {
             {/* Relationship Status Header */}
             <div className="text-center py-4">
               {partnerId && partnerProfile && userProfile ? (
-                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-pink-50 to-purple-50 rounded-full border border-pink-200">
-                  <Heart className="w-4 h-4 text-pink-500 fill-current" />
-                  <span className="text-sm font-medium text-gray-800">
+                <div className={`inline-flex items-center space-x-2 px-4 py-2 ${
+                      isDarkMode ? 'bg-black rounded-full border border-pink-900' : 'bg-gradient-to-r from-pink-50 to-purple-50 rounded-full border border-pink-200'
+                    }`}>
+                  <Heart className={`w-4 h-4 text-pink-500 fill-current`} />
+                  <span className={`text-sm font-medium ${
+                      isDarkMode ? 'text-white' : 'text-gray-800'
+                    }`}>
                     {userProfile.displayName || 'You'} & {partnerProfile.displayName || 'Partner'}
                   </span>
-                  <Heart className="w-4 h-4 text-pink-500 fill-current" />
+                  <Heart className={`w-4 h-4 text-pink-500 fill-current`} />
                 </div>
               ) : (
                 <div className="inline-flex items-center space-x-2 px-4 py-2 bg-yellow-50 rounded-full border border-yellow-200">
@@ -277,7 +334,7 @@ function AppContent() {
                 <div className="max-w-2xl mx-auto">
                   <div className={`rounded-xl p-6 shadow-lg border text-center transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-800 border-gray-700' 
+                      ? 'bg-gray-900 border-gray-700' 
                       : 'bg-white border-gray-100'
                   }`}>
                     <Bell className="w-12 h-12 text-pink-500 mx-auto mb-4" />
@@ -319,21 +376,21 @@ function AppContent() {
       case 'activities':
         return (
           <div className="space-y-6">
-            <Games />
+            <Games isDarkMode={isDarkMode} />
           </div>
         );
       case 'profile':
-        return <Profile onPairPartner={() => setShowPartnerPairing(true)} />;
+        return <Profile onPairPartner={() => setShowPartnerPairing(true)} isDarkMode={isDarkMode} />;
 
       case 'feed':
         return (
-          <FeedPage />
+          <FeedPage isDarkMode={isDarkMode} />
         );
 
 // FeedPage component for the feed tab
 
 
-function FeedPage() {
+function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
   const [showPhoto, setShowPhoto] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [showMusic, setShowMusic] = useState(false);
@@ -349,8 +406,12 @@ function FeedPage() {
   return (
     <div className="relative flex flex-col items-center min-h-[60vh] px-4 py-10">
       <div className="mb-8 text-center">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Your Shared Feed</h2>
-        <p className="text-gray-600 max-w-md mx-auto">
+        <h2 className={`text-2xl font-bold mb-2 transition-colors ${
+          isDarkMode ? 'text-white' : 'text-gray-800'
+        }`}>Your Shared Feed</h2>
+        <p className={`max-w-md mx-auto transition-colors ${
+          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+        }`}>
           Photos, videos, and music links that you and your partner share will appear here. Start sharing your moments!
         </p>
       </div>
@@ -358,9 +419,10 @@ function FeedPage() {
         onSharePhoto={() => setShowPhoto(true)}
         onShareVideo={() => setShowVideo(true)}
         onShareMusic={() => setShowMusic(true)}
+        isDarkMode={isDarkMode}
       />
       <div className="mt-8 w-full">
-        {partnerId && <FeedList partnerId={partnerId} />}
+        {partnerId && <FeedList partnerId={partnerId} isDarkMode={isDarkMode} />}
       </div>
 
       {/* Modals for sharing */}
@@ -398,7 +460,7 @@ function FeedPage() {
   );
 }
       case 'dates':
-        return <VirtualDates />;
+        return <VirtualDates isDarkMode={isDarkMode} />;
       default:
         return (
           <div className="space-y-6">
@@ -425,7 +487,7 @@ function FeedPage() {
       {/* Header */}
       <header className={`backdrop-blur-md border-b sticky top-0 z-40 safe-area-top transition-colors duration-300 ${
         isDarkMode 
-          ? 'bg-gray-800/80 border-gray-700' 
+          ? 'bg-gray-900/80 border-gray-700' 
           : 'bg-white/80 border-pink-200'
       }`}>
         <div className="px-4 py-3">
@@ -434,8 +496,8 @@ function FeedPage() {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className={`p-2 rounded-xl transition-colors ${
                 isDarkMode 
-                  ? 'text-gray-300 hover:text-pink-400 hover:bg-gray-700' 
-                  : 'text-gray-600 hover:text-pink-600 hover:bg-pink-100'
+                  ? 'text-gray-300 hover:bg-gray-700' 
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
               <Menu className="w-5 h-5" />
@@ -471,7 +533,7 @@ function FeedPage() {
         {/* Sliding menu */}
         <div 
           className={`absolute left-0 top-0 h-full w-80 max-w-[85vw] shadow-xl transform transition-transform duration-300 ease-out ${
-            isDarkMode ? 'bg-gray-800' : 'bg-white'
+            isDarkMode ? 'bg-gray-900' : 'bg-white'
           } ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -514,7 +576,7 @@ function FeedPage() {
                       className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
                         activeTab === tab.id
                           ? 'bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700'
-                          : 'text-gray-700 hover:bg-gray-100'
+                          : 'text-white hover:bg-gray-100'
                       }`}
                     >
                       <Icon className={`w-4 h-4 ${activeTab === tab.id ? tab.color : 'text-gray-500'}`} />
@@ -557,7 +619,7 @@ function FeedPage() {
                     <span className="text-sm font-medium">Feedback</span>
                   </button>
                   <button 
-                    onClick={() => setIsDarkMode(!isDarkMode)}
+                    onClick={handleDarkModeToggle}
                     className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
                       isDarkMode 
                         ? 'text-gray-300 hover:bg-gray-700' 
@@ -612,7 +674,7 @@ function FeedPage() {
       {/* Bottom Navigation - Mobile Only */}
       <nav className={`fixed bottom-0 left-0 right-0 backdrop-blur-md border-t z-30 safe-area-bottom md:hidden transition-colors ${
         isDarkMode 
-          ? 'bg-gray-800/90 border-gray-700' 
+          ? 'bg-gray-900/90 border-gray-700' 
           : 'bg-white/90 border-pink-200'
       }`}>
         <div className="grid grid-cols-5 gap-1 px-1 py-2">

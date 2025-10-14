@@ -249,7 +249,7 @@ export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {
   return (
     <div className={`rounded-xl p-4 md:p-6 shadow-lg border transition-colors ${
       isDarkMode 
-        ? 'bg-gray-800 border-gray-700' 
+        ? 'bg-gray-900 border-gray-700' 
         : 'bg-white border-gray-100'
     }`}>
       <div className="text-center mb-6">
@@ -341,7 +341,7 @@ export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {
             }`}>{partnerProfile?.displayName || 'Partner'}'s Mood</h5>
             <div className={`flex items-center justify-center p-3 rounded-lg border transition-colors ${
               isDarkMode 
-                ? 'bg-gray-800 border-gray-600' 
+                ? 'bg-gray-900 border-gray-600' 
                 : 'bg-pink-50 border-pink-200'
             }`}>
               {partnerId ? (

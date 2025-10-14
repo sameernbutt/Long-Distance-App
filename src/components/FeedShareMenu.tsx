@@ -5,9 +5,10 @@ interface Props {
   onSharePhoto: () => void;
   onShareVideo: () => void;
   onShareMusic: () => void;
+  isDarkMode?: boolean;
 }
 
-const FeedShareMenu: React.FC<Props> = ({ onSharePhoto, onShareVideo, onShareMusic }) => {
+const FeedShareMenu: React.FC<Props> = ({ onSharePhoto, onShareVideo, onShareMusic, isDarkMode = false }) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -20,21 +21,37 @@ const FeedShareMenu: React.FC<Props> = ({ onSharePhoto, onShareVideo, onShareMus
         <Plus className="w-6 h-6" />
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg z-10 border border-pink-100">
+        <div className={`absolute right-0 mt-2 w-44 rounded-xl shadow-lg z-10 border transition-colors ${
+          isDarkMode 
+            ? 'bg-gray-900 border-gray-600' 
+            : 'bg-white border-pink-100'
+        }`}>
           <button
-            className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-pink-50 rounded-t-xl"
+            className={`flex items-center w-full px-4 py-2 rounded-t-xl transition-colors ${
+              isDarkMode 
+                ? 'text-gray-300 hover:bg-gray-700' 
+                : 'text-gray-700 hover:bg-pink-50'
+            }`}
             onClick={() => { setOpen(false); onSharePhoto(); }}
           >
             <Image className="w-5 h-5 mr-2 text-pink-500" /> Share Photo
           </button>
           <button
-            className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-pink-50"
+            className={`flex items-center w-full px-4 py-2 transition-colors ${
+              isDarkMode 
+                ? 'text-gray-300 hover:bg-gray-700' 
+                : 'text-gray-700 hover:bg-pink-50'
+            }`}
             onClick={() => { setOpen(false); onShareVideo(); }}
           >
             <Video className="w-5 h-5 mr-2 text-purple-500" /> Share Video
           </button>
           <button
-            className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-pink-50 rounded-b-xl"
+            className={`flex items-center w-full px-4 py-2 rounded-b-xl transition-colors ${
+              isDarkMode 
+                ? 'text-gray-300 hover:bg-gray-700' 
+                : 'text-gray-700 hover:bg-pink-50'
+            }`}
             onClick={() => { setOpen(false); onShareMusic(); }}
           >
             <Music className="w-5 h-5 mr-2 text-blue-500" /> Share Music

@@ -10,7 +10,11 @@ interface TruthOrDarePrompts {
   dare: string;
 }
 
-export default function Games() {
+interface GamesProps {
+  isDarkMode?: boolean;
+}
+
+export default function Games({ isDarkMode = false }: GamesProps) {
   const [activeGame, setActiveGame] = useState<'would-you-rather' | 'truth-or-dare' | null>(null);
   const [currentPrompt, setCurrentPrompt] = useState('');
   const [gameHistory, setGameHistory] = useState<string[]>([]);
@@ -81,7 +85,9 @@ export default function Games() {
 
   if (isLoading) {
     return (
-      <div className="p-4 md:p-6 text-center text-gray-500">
+      <div className={`p-4 md:p-6 text-center transition-colors ${
+        isDarkMode ? 'text-gray-400' : 'text-gray-500'
+      }`}>
         Loading games...
       </div>
     );
@@ -90,8 +96,12 @@ export default function Games() {
   return (
     <div className="p-4 md:p-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Couple Games</h2>
-        <p className="text-gray-600 text-sm md:text-base">Fun games to play together from afar</p>
+        <h2 className={`text-2xl md:text-3xl font-bold mb-2 transition-colors ${
+          isDarkMode ? 'text-white' : 'text-gray-800'
+        }`}>Couple Games</h2>
+        <p className={`text-sm md:text-base transition-colors ${
+          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+        }`}>Fun games to play together from afar</p>
       </div>
 
       <div className="max-w-2xl mx-auto">
@@ -100,36 +110,64 @@ export default function Games() {
           <div className="grid gap-6 mb-8">
             <div 
               onClick={generateWouldYouRather}
-              className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-4 md:p-6 border border-blue-200 cursor-pointer hover:shadow-lg active:scale-95 transition-all duration-200"
+              className={`rounded-xl p-4 md:p-6 border cursor-pointer hover:shadow-lg active:scale-95 transition-all duration-200 ${
+                isDarkMode 
+                  ? 'bg-black border-blue-400 text-blue-100' 
+                  : 'bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200'
+              }`}
             >
               <div className="text-center">
-                <div className="p-3 bg-blue-500 rounded-full w-fit mx-auto mb-4">
-                  <Zap className="w-6 h-6 text-white" />
+                <div className={`p-3 rounded-full w-fit mx-auto mb-4 ${
+                  isDarkMode ? 'bg-blue-500 text-white' : 'bg-blue-500 text-white'
+                }`}>
+                  <Zap className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-2">Would You Rather</h3>
-                <p className="text-gray-600 text-sm">Choose between two interesting options and discuss your choices</p>
+                <h3 className={`text-lg md:text-xl font-bold mb-2 transition-colors ${
+                  isDarkMode ? 'text-blue-100' : 'text-gray-800'
+                }`}>Would You Rather</h3>
+                <p className={`text-sm transition-colors ${
+                  isDarkMode ? 'text-blue-100' : 'text-gray-600'
+                }`}>Choose between two interesting options and discuss your choices</p>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-pink-50 to-rose-100 rounded-xl p-4 md:p-6 border border-pink-200">
+            <div className={`rounded-xl p-4 md:p-6 border transition-colors ${
+              isDarkMode 
+                ? 'bg-black border-pink-400 text-white' 
+                : 'bg-gradient-to-br from-pink-50 to-rose-100 border-pink-200'
+            }`}>
               <div className="text-center mb-4">
-                <div className="p-3 bg-pink-500 rounded-full w-fit mx-auto mb-4">
-                  <Heart className="w-6 h-6 text-white" />
+                <div className={`p-3 rounded-full w-fit mx-auto mb-4 ${
+                  isDarkMode ? 'bg-pink-500 text-white' : 'bg-pink-500 text-white'
+                }`}>
+                  <Heart className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-2">Truth or Dare</h3>
-                <p className="text-gray-600 text-sm mb-4">Get to know each other better or have some fun challenges</p>
+                <h3 className={`text-lg md:text-xl font-bold mb-2 transition-colors ${
+                  isDarkMode ? 'text-pink-100' : 'text-gray-800'
+                }`}>Truth or Dare</h3>
+                <p className={`text-sm mb-4 transition-colors ${
+                  isDarkMode ? 'text-pink-100' : 'text-gray-600'
+                }`}>Get to know each other better or have some fun challenges</p>
               </div>
               
               <div className="flex gap-3">
                 <button
                   onClick={() => generateTruthOrDare('truth')}
-                  className="flex-1 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 active:scale-95 transition-all font-medium"
+                  className={`flex-1 py-3 rounded-lg active:scale-95 transition-all font-medium ${
+                    isDarkMode 
+                      ? 'bg-purple-500 text-white hover:bg-purple-600' 
+                      : 'bg-purple-500 text-white hover:bg-purple-600'
+                  }`}
                 >
                   Truth
                 </button>
                 <button
                   onClick={() => generateTruthOrDare('dare')}
-                  className="flex-1 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 active:scale-95 transition-all font-medium"
+                  className={`flex-1 py-3 rounded-lg active:scale-95 transition-all font-medium ${
+                    isDarkMode 
+                      ? 'bg-pink-500 text-white hover:bg-pink-600' 
+                      : 'bg-pink-500 text-white hover:bg-pink-600'
+                  }`}
                 >
                   Dare
                 </button>
@@ -140,7 +178,11 @@ export default function Games() {
 
         {/* Active Game */}
         {activeGame && (
-          <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100 mb-6">
+          <div className={`rounded-xl p-4 md:p-6 shadow-lg border mb-6 transition-colors ${
+            isDarkMode 
+              ? 'bg-gray-900 border-gray-600' 
+              : 'bg-white border-gray-100'
+          }`}>
             <div className="text-center mb-6">
               <div className="p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full w-fit mx-auto mb-4">
                 {activeGame === 'would-you-rather' ? (
@@ -149,19 +191,31 @@ export default function Games() {
                   <Heart className="w-6 h-6 text-white" />
                 )}
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+              <h3 className={`text-xl md:text-2xl font-bold mb-2 transition-colors ${
+                isDarkMode ? 'text-white' : 'text-gray-800'
+              }`}>
                 {activeGame === 'would-you-rather' ? 'Would You Rather' : 'Truth or Dare'}
               </h3>
             </div>
 
-            <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl p-4 md:p-6 mb-6 border border-pink-200">
-              <p className="text-base md:text-lg text-gray-700 text-center leading-relaxed">{currentPrompt}</p>
+            <div className={`rounded-xl p-4 md:p-6 mb-6 border transition-colors ${
+              isDarkMode 
+                ? 'bg-gradient-to-r from-gray-700 to-gray-600 border-gray-500' 
+                : 'bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200'
+            }`}>
+              <p className={`text-base md:text-lg text-center leading-relaxed transition-colors ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>{currentPrompt}</p>
             </div>
 
             <div className="flex flex-wrap gap-3 justify-center">
               <button
                 onClick={() => setActiveGame(null)}
-                className="px-4 md:px-6 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 active:scale-95 transition-all text-sm md:text-base"
+                className={`px-4 md:px-6 py-2 rounded-xl active:scale-95 transition-all text-sm md:text-base ${
+                  isDarkMode 
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
               >
                 Back to Games
               </button>
@@ -198,11 +252,21 @@ export default function Games() {
 
         {/* Game History */}
         {gameHistory.length > 0 && (
-          <div className="bg-gray-50 rounded-xl p-6 border">
-            <h4 className="font-semibold text-gray-800 mb-4">Recent Prompts</h4>
+          <div className={`rounded-xl p-6 border transition-colors ${
+            isDarkMode 
+              ? 'bg-gray-700 border-gray-600' 
+              : 'bg-gray-50 border-gray-200'
+          }`}>
+            <h4 className={`font-semibold mb-4 transition-colors ${
+              isDarkMode ? 'text-white' : 'text-gray-800'
+            }`}>Recent Prompts</h4>
             <div className="space-y-3">
               {gameHistory.map((prompt, index) => (
-                <div key={index} className="bg-white rounded-lg p-3 text-sm text-gray-600">
+                <div key={index} className={`rounded-lg p-3 text-sm transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-600 text-gray-300' 
+                    : 'bg-white text-gray-600'
+                }`}>
                   {prompt}
                 </div>
               ))}
