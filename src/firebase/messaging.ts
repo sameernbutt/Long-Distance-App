@@ -1,4 +1,5 @@
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { registerWebPush } from '../push';
 import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { app, db, auth } from './config';
 
@@ -22,39 +23,28 @@ export interface NotificationData {
 export const requestNotificationPermission = async (): Promise<string | null> => {
   try {
     const permission = await Notification.requestPermission();
-    
-    if (permission === 'granted') {
-      const token = await getToken(messaging, {
-        vapidKey: VAPID_KEY,
-      });
-      
+    if (permission !== 'granted') return null;
+
+    try {
+      const token = await getToken(messaging, { vapidKey: VAPID_KEY });
       if (token) {
-        console.log('FCM Token:', token);
-        
-        // Store the token in the user's profile
         const user = auth.currentUser;
         if (user) {
-          try {
-            await updateDoc(doc(db, 'users', user.uid), {
-              fcmToken: token
-            });
-            console.log('FCM token stored in user profile');
-          } catch (error) {
-            console.error('Error storing FCM token:', error);
-          }
+          await updateDoc(doc(db, 'users', user.uid), { fcmToken: token });
         }
-        
         return token;
-      } else {
-        console.log('No registration token available.');
-        return null;
       }
-    } else {
-      console.log('Notification permission denied.');
-      return null;
+    } catch (e) {
+      console.warn('FCM unsupported or failed, trying Web Push:', e);
+      const user = auth.currentUser;
+      if (user) {
+        await registerWebPush(user.uid);
+        return 'webpush';
+      }
     }
+    return null;
   } catch (error) {
-    console.error('An error occurred while retrieving token:', error);
+    console.error('An error occurred while enabling notifications:', error);
     return null;
   }
 };
@@ -66,7 +56,7 @@ export const sendThinkingOfYouNotification = async (
   fromUserName: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    // Store notification in Firestore
+    // Store notification in Firestore (trigger function to send via FCM or Web Push)
     const notificationData: Omit<NotificationData, 'id'> = {
       fromUserId,
       toUserId,
@@ -81,17 +71,21 @@ export const sendThinkingOfYouNotification = async (
       createdAt: serverTimestamp()
     });
 
-    // In a real implementation, you would call a Cloud Function here
-    // that would send the push notification to the partner's device
-    // For now, we'll just store it in Firestore
-    
     return { success: true };
   } catch (error) {
-    console.error('Error sending notification:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    };
+    console.error('Error sending notification via Firestore:', error);
+    // Fallback to HTTPS endpoint
+    try {
+      const res = await fetch('/api/send-thinking-of-you', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fromUserId, toUserId, fromUserName })
+      });
+      const json = await res.json();
+      return json;
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Unknown error' };
+    }
   }
 };
 

@@ -1,160 +1,130 @@
-# Push Notification Setup Instructions
+# Push Notifications (FCM + Web Push VAPID) Setup
 
 ## 🚀 Overview
-I've implemented push notifications for your Long Distance App! When users click the "Send 'Thinking of You' Notification" button, it will send a push notification to their partner's iPhone home screen saying "[PARTNER_NAME] is thinking of you!"
+Notifications now support two paths automatically:
+- FCM (Firebase Cloud Messaging) where supported.
+- Web Push (VAPID) fallback when FCM isn’t supported (e.g., Safari/iOS PWA, many desktop browsers).
 
-## 📋 What You Need to Do
+Pressing “Send ‘Thinking of You’ Notification” will notify the partner via FCM or Web Push depending on their device capabilities.
 
-### 1. Firebase Console Setup
+## 📋 What You Need To Do
 
-#### A. Enable Cloud Messaging
-1. Go to your Firebase Console
-2. Navigate to **Project Settings** → **Cloud Messaging**
-3. Generate a **Server Key** (if you don't have one)
-4. Generate a **Web Push Certificate** and get your **VAPID Key**
+### 1) Generate VAPID keys (one-time)
+You can use any of these methods:
+- Use web-push CLI locally (recommended for accuracy):
+  - In the `functions` folder: `npm i web-push`
+  - Generate keys: `npx web-push generate-vapid-keys`
+  - Save the output Public/Private keys.
 
-#### B. Update Configuration Files
-
-**Add VAPID Key to your environment variables:**
-Add this to your `.env` file:
+### 2) Set environment/config values
+- In root `.env` (used by the client):
 ```env
-VITE_FIREBASE_VAPID_KEY=your-actual-vapid-key
+VITE_FIREBASE_VAPID_KEY=YOUR_VAPID_PUBLIC
+FIREBASE_FUNCTIONS_URL=https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net
 ```
 
-**Update Service Worker:**
-The service worker will be automatically generated with your environment variables during build. Just make sure your `.env` file has all the required Firebase config values:
-
-```env
-VITE_FIREBASE_API_KEY=your-actual-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-actual-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your-actual-sender-id
-VITE_FIREBASE_APP_ID=your-actual-app-id
-VITE_FIREBASE_VAPID_KEY=your-actual-vapid-key
-```
-
-**Note:** The build process will automatically generate the service worker with your environment variables. The messaging service uses your existing Firebase config from `src/firebase/config.ts`!
-
-### 2. Deploy Cloud Functions
-
-#### A. Install Firebase CLI (if not already installed)
+- In Firebase Functions config (used by Cloud Functions for Web Push):
 ```bash
-npm install -g firebase-tools
+firebase functions:config:set \
+  webpush.public="YOUR_VAPID_PUBLIC" \
+  webpush.private="YOUR_VAPID_PRIVATE" \
+  webpush.email="you@example.com"
 ```
 
-#### B. Initialize Firebase Functions
+### 3) Install and deploy functions
+In the `functions` directory:
 ```bash
-cd functions
 npm install
-```
-
-#### C. Deploy Functions
-```bash
+npm install web-push --save
 firebase deploy --only functions
 ```
 
-### 3. Update Firestore & Storage Rules
-Deploy the updated Firestore rules from `firestore-rules-fixed.txt`:
+### 4) Ensure the service worker is served
+The Web Push service worker is at:
+```
+public/notification-sw.js
+```
+It must be accessible at `/notification-sw.js` on your domain (Vercel will serve from `public/`).
+
+### 5) Firestore & Storage rules (confirm)
+Deploy your existing rules:
 ```bash
+firebase deploy --only firestore:rules
+firebase deploy --only storage
+```
+No changes required for rules beyond what you already have in `firestore-rules-fixed.txt`. The app writes:
+- `users/{uid}.fcmToken` (FCM path) and/or `users/{uid}.webPushSubscription` (Web Push path)
+- `notifications` docs for triggering the server send
+
+Your `users` rules already allow the user to update their own doc, so no change is needed for adding `webPushSubscription`.
+
+## 🔧 How It Works
+1) User taps “Enable Notifications”. The app tries:
+   - FCM first (stores `fcmToken` in `users/{uid}`)
+   - If unsupported, registers Web Push (stores `webPushSubscription` in `users/{uid}`) and uses `/notification-sw.js`.
+2) User taps “Send ‘Thinking of You’ Notification”. The app writes a doc to `notifications`.
+3) Cloud Function (`sendNotification`) triggers:
+   - If `users/{toUserId}.fcmToken` exists → send via FCM
+   - Else if `users/{toUserId}.webPushSubscription` exists → send via Web Push (VAPID)
+4) If writing the Firestore doc fails, the client falls back to calling an HTTPS endpoint (`/api/send-thinking-of-you`) which relays to the function.
+
+## 📱 Testing
+Desktop (Chrome/Edge/Firefox):
+1. Open the app, click “Enable Notifications”.
+2. Approve the prompt.
+3. Send a test notification.
+
+iPhone (iOS 16.4+):
+1. Open the site in Safari.
+2. Add to Home Screen (PWA).
+3. Open the PWA from the home screen, go to home tab, “Enable Notifications”.
+4. Send a test notification. You should receive a lock-screen banner.
+
+Notes for iOS:
+- Push works only for PWAs added to Home Screen.
+- Ensure the domain is HTTPS and the service worker is reachable at `/notification-sw.js`.
+
+## 🛠 Troubleshooting
+- Can’t enable notifications in Safari:
+  - Confirm PWA is installed (Add to Home Screen), then enable inside the PWA.
+- No notification received:
+  - Check Functions logs in Firebase Console.
+  - Confirm `users/{uid}` contains either `fcmToken` or `webPushSubscription`.
+  - Verify VAPID keys are set via `firebase functions:config:get`.
+- CORS or network errors when sending:
+  - Set `FIREBASE_FUNCTIONS_URL` correctly in `.env`.
+  - Ensure `/api/send-thinking-of-you` route exists in the deployed app and points to your functions URL.
+
+## 📄 Files involved
+- `public/notification-sw.js` — Web Push service worker
+- `src/push.ts` — Client helpers to register/unregister Web Push and call HTTPS fallback
+- `src/firebase/messaging.ts` — Now tries FCM first, falls back to Web Push
+- `functions/index.js` — Sends via FCM or Web Push (VAPID). Also exposes `createThinkingOfYou` HTTPS endpoint
+- `api/send-thinking-of-you.ts` — Vercel API route that forwards to the HTTPS function
+
+## 🔒 Security
+- `firestore-rules-fixed.txt` already allows:
+  - users to update their own profile document (for saving tokens/subscriptions)
+  - creating `notifications` docs by the authenticated sender
+No additional rule changes required.
+
+## ✅ Quick Command Reference
+```bash
+# in functions/
+npm install
+npm install web-push --save
+firebase functions:config:set \
+  webpush.public="YOUR_VAPID_PUBLIC" \
+  webpush.private="YOUR_VAPID_PRIVATE" \
+  webpush.email="you@example.com"
+firebase deploy --only functions
+
+# in project root (.env)
+VITE_FIREBASE_VAPID_KEY=YOUR_VAPID_PUBLIC
+FIREBASE_FUNCTIONS_URL=https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net
+
+# deploy rules if you changed anything else
 firebase deploy --only firestore:rules
 ```
 
-Deploy the Storage rules from `storage.rules`:
-```bash
-firebase deploy --only storage
-```
-
-### 4. Update User Schema
-Add the `fcmToken` field to your user documents. The app will automatically store this when users enable notifications.
-
-## 🔧 How It Works
-
-### 1. User Flow
-1. User clicks "Enable Notifications" button
-2. Browser requests notification permission
-3. If granted, FCM token is generated and stored in user's profile
-4. User can now send "thinking of you" notifications to their partner
-
-### 2. Notification Flow
-1. User clicks "Send 'Thinking of You' Notification"
-2. Notification data is stored in Firestore `notifications` collection
-3. Cloud Function triggers automatically
-4. Function retrieves partner's FCM token
-5. Push notification is sent to partner's device
-6. Partner sees notification on their iPhone home screen
-
-### 3. Files Created/Modified
-
-#### New Files:
-- `public/firebase-messaging-sw.js` - Service worker for handling notifications
-- `src/firebase/messaging.ts` - Firebase messaging service
-- `functions/index.js` - Cloud Function for sending notifications
-- `functions/package.json` - Dependencies for Cloud Functions
-
-#### Modified Files:
-- `src/App.tsx` - Added notification button and functionality
-- `firestore-rules-fixed.txt` - Added rules for notifications collection
-
-## 📱 Testing
-
-### 1. Test on Desktop
-1. Open your app in Chrome/Firefox
-2. Click "Enable Notifications"
-3. Allow notifications when prompted
-4. Send a test notification to your partner
-
-### 2. Test on iPhone
-1. Open your app in Safari
-2. Add to Home Screen (PWA)
-3. Enable notifications
-4. Test sending notifications
-
-## 🛠 Troubleshooting
-
-### Common Issues:
-
-1. **"Notifications not working"**
-   - Check if VAPID key is correct
-   - Verify Firebase config matches your project
-   - Ensure service worker is accessible at `/firebase-messaging-sw.js`
-
-2. **"Permission denied"**
-   - User needs to manually enable notifications in browser settings
-   - On iPhone: Settings → Safari → Notifications → Allow
-
-3. **"Cloud Function not triggering"**
-   - Check Firebase Functions logs
-   - Verify Firestore rules allow notification creation
-   - Ensure functions are deployed
-
-4. **"FCM token not generated"**
-   - Check if service worker is properly registered
-   - Verify VAPID key is correct
-   - Check browser console for errors
-
-## 🔒 Security Notes
-
-- FCM tokens are stored in user profiles
-- Only partners can send notifications to each other
-- Notifications are stored in Firestore with proper security rules
-- Cloud Functions handle the actual push notification sending
-
-## 📈 Next Steps
-
-Once this is working, you could enhance it by:
-- Adding notification history
-- Custom notification messages
-- Notification preferences
-- Read receipts
-- Push notification analytics
-
-## 🆘 Need Help?
-
-If you run into issues:
-1. Check the browser console for errors
-2. Check Firebase Functions logs
-3. Verify all configuration values are correct
-4. Test with a simple notification first
-
-The notification system is now fully integrated and ready to use once you complete the Firebase setup!
+You’re set. Once deployed, enable notifications per-user and start sending.
