@@ -1,0 +1,151 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read/write their own profile
+    // Also allow reading for partner connections and allow partners to update partnerId
+    match /users/{userId} {
+      // Allow the user to read/write their own profile.
+      // Also allow a partnered user to read the other user's profile (so partners can view each other's profiles).
+      allow read: if request.auth != null && (
+        request.auth.uid == userId ||
+        // Check if the requester has partnerId equal to this userId
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.partnerId == userId
+      );
+      allow write: if request.auth != null && request.auth.uid == userId;
+
+      // Allow updating only the partnerId field in controlled scenarios (keeps previous behavior)
+      allow update: if request.auth != null && 
+        ('partnerId' in request.resource.data) &&
+        (request.resource.data.keys().hasOnly(['partnerId']) || 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['partnerId']));
+    }
+    
+    // Partner connections rules
+    match /partnerConnections/{connectionId} {
+      // Allow creating new connections
+      allow create: if request.auth != null && request.resource.data.partner1Id == request.auth.uid;
+      
+      // Allow reading connections you're part of OR connections with matching code for joining
+      allow read: if request.auth != null && (
+        (resource.data.partner1Id == request.auth.uid || 
+         resource.data.partner2Id == request.auth.uid) ||
+        // Allow reading for queries with partnerCode (needed for joining)
+        resource.data.status == 'pending'
+      );
+      
+      // Allow updating connections you're part of
+      allow update: if request.auth != null && 
+        (resource.data.partner1Id == request.auth.uid || 
+         resource.data.partner2Id == request.auth.uid ||
+         // Allow joining - updating with your partner2Id
+         (resource.data.status == 'pending' && request.resource.data.partner2Id == request.auth.uid));
+    }
+    
+    // Feed items - users can read their own and partner's items
+    match /feed/{itemId} {
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.partnerId == resource.data.userId ||
+        request.auth.uid in resource.data.likes
+      );
+      allow create: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Moods - users can read their own moods and write/create moods for themselves
+    match /moods/{moodId} {
+      // Allow owner to read, and allow partner to read moods belonging to their partner
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.partnerId == resource.data.userId
+      );
+
+      // Creations: allow if creator is the owner (userId == auth.uid),
+      // OR allow a mirrored create for a partner when:
+      //  - the document marks isFromPartner == true
+      //  - and the creator's users/{creatorUid}.partnerId equals the target userId (they are paired)
+      allow create: if request.auth != null && (
+        request.resource.data.userId == request.auth.uid ||
+        (
+          request.resource.data.isFromPartner == true &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.partnerId == request.resource.data.userId
+        )
+      );
+
+      // Updates/deletes restricted to owner
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // Daily answers - users can read/write their own answers
+    match /dailyAnswers/{answerId} {
+      // Allow owners to read/write their answers. Allow partner to read the partner's answers if paired.
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.partnerId == resource.data.userId
+      );
+      // Writes must be performed by owner
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // Global daily questions - everyone can read, system manages writes
+    match /globalDailyQuestions/{questionDate} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null; // Users can create today's question if it doesn't exist
+    }
+    
+    // Custom dates - users can read their own and partner's dates
+    match /customDates/{dateId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || 
+         request.auth.uid == request.resource.data.userId);
+    }
+    
+    // Bucket list - users can read their own and partner's items, write their own items
+    match /bucketList/{itemId} {
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.partnerId == resource.data.userId
+      );
+      allow create: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Couple anniversaries - readable/writable by both partners
+    match /coupleAnniversaries/{coupleId} {
+      allow read, write: if request.auth != null && 
+        (coupleId.split('_')[0] == request.auth.uid || 
+         coupleId.split('_')[1] == request.auth.uid);
+    }
+    
+    // Couple reunions - readable/writable by both partners
+    match /coupleReunions/{coupleId} {
+      allow read, write: if request.auth != null && 
+        (coupleId.split('_')[0] == request.auth.uid || 
+         coupleId.split('_')[1] == request.auth.uid);
+    }
+    
+    // Couple date nights - readable/writable by both partners
+    match /coupleDateNights/{coupleId} {
+      allow read, write: if request.auth != null && 
+        (coupleId.split('_')[0] == request.auth.uid || 
+         coupleId.split('_')[1] == request.auth.uid);
+    }
+    
+    // Notifications - users can read their own notifications and create notifications for their partner
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && 
+        (resource.data.toUserId == request.auth.uid || 
+         resource.data.fromUserId == request.auth.uid);
+      allow create: if request.auth != null && 
+        request.resource.data.fromUserId == request.auth.uid;
+      allow update: if request.auth != null && 
+        resource.data.toUserId == request.auth.uid;
+    }
+  }
+}
