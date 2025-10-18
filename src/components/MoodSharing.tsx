@@ -159,6 +159,8 @@ export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {
   const [isShared, setIsShared] = useState(false);
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [partnerProfile, setPartnerProfile] = useState<any | null>(null);
+  const [isChoosingMood, setIsChoosingMood] = useState(false);
+
 
   useEffect(() => {
     // Load mood history from localStorage
@@ -225,6 +227,8 @@ export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {
       setMoodHistory(updatedHistory);
       localStorage.setItem('moodHistory', JSON.stringify(updatedHistory));
       setIsShared(true);
+      setIsChoosingMood(false);
+
       setTimeout(() => {
         setSelectedMood(null);
         setIsShared(false);
@@ -265,27 +269,36 @@ export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {
       </div>
 
       {/* Mood Selection */}
-      <div className="mb-6">
-        {/* <h4 className="text-sm font-medium text-gray-700 mb-3">How are you feeling?</h4> */}
-        <div className="flex space-x-3 overflow-x-auto pb-2">
-          {moods.map((mood) => (
-            <button
-              key={mood.id}
-              onClick={() => handleMoodSelect(mood.id)}
-              className={`flex-shrink-0 w-24 p-4 rounded-xl border-2 transition-all duration-200 ${
-                selectedMood === mood.id
-                  ? `border-${mood.color.split('-')[1]}-300 ${mood.bgColor}`
-                  : isDarkMode 
-                    ? 'border-gray-600 hover:border-gray-500 hover:bg-gray-700'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <div className="text-3xl mb-2">{mood.emoji}</div>
-              <div className={`text-sm font-medium ${mood.color}`}>{mood.name}</div>
-            </button>
-          ))}
-        </div>
+      <div className="mb-6 text-center">
+        {!isChoosingMood ? (
+          <button
+            onClick={() => setIsChoosingMood(true)}
+            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium shadow hover:opacity-90 transition"
+          >
+            Share Mood
+          </button>
+        ) : (
+          <div className="flex space-x-3 overflow-x-auto pb-2 mt-4 justify-center">
+            {moods.map((mood) => (
+              <button
+                key={mood.id}
+                onClick={() => handleMoodSelect(mood.id)}
+                className={`flex-shrink-0 w-24 p-4 rounded-xl border-2 transition-all duration-200 ${
+                  selectedMood === mood.id
+                    ? `border-${mood.color.split('-')[1]}-300 ${mood.bgColor}`
+                    : isDarkMode 
+                      ? 'border-gray-600 hover:border-gray-500 hover:bg-gray-700'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <div className="text-3xl mb-2">{mood.emoji}</div>
+                <div className={`text-sm font-medium ${mood.color}`}>{mood.name}</div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
 
 
       {/* Message feature removed — moods are sent immediately on selection */}
