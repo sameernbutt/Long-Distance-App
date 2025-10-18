@@ -26,10 +26,12 @@ async function sendThinking(toUserId: string, fromUserName: string) {
       notification: {
         title: 'Thinking of You! ❤️',
         body: `${fromUserName} is thinking of you!`,
-        icon: '/icons/icon-192.png',
-        badge: '/icons/icon-96.png',
       },
       token: fcmToken,
+      data: {
+        url: '/',
+        fromUserName: fromUserName,
+      },
     } as any;
     await admin.messaging().send(payload);
     logger.info('Sent via FCM', { toUserId });
