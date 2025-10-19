@@ -208,13 +208,31 @@ function AppContent() {
   // Request notification permission
   const requestPermission = async () => {
     try {
+      // Check if we're on iOS Safari
+      const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|OPiOS|mercury/.test(navigator.userAgent);
+      
+      if (isIOSSafari) {
+        // Check if the app is running as a PWA (installed to home screen)
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                            (window.navigator as any).standalone === true;
+        
+        if (!isStandalone) {
+          alert('To enable notifications on iPhone:\n\n1. Tap the Share button (square with arrow up)\n2. Select "Add to Home Screen"\n3. Open the app from your home screen\n4. Try enabling notifications again\n\nThis is required for iPhone notifications to work.');
+          return;
+        }
+      }
+      
       const token = await requestNotificationPermission();
       if (token) {
         setNotificationPermission('granted');
         alert('Notifications enabled! You can now send sweet messages to your partner.');
       } else {
         setNotificationPermission('denied');
-        alert('Notification permission denied. Please enable notifications in your browser settings.');
+        if (isIOSSafari) {
+          alert('Notification permission denied. Make sure you:\n\n1. Installed the app to your home screen\n2. Opened it from the home screen (not Safari)\n3. Try again from the home screen app');
+        } else {
+          alert('Notification permission denied. Please enable notifications in your browser settings.');
+        }
       }
     } catch (error) {
       console.error('Error requesting notification permission:', error);
