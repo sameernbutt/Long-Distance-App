@@ -210,19 +210,29 @@ function AppContent() {
     try {
       // Check if we're on iOS Safari
       const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|OPiOS|mercury/.test(navigator.userAgent);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                          (window.navigator as any).standalone === true;
+      
+      console.log('Debug info:', {
+        userAgent: navigator.userAgent,
+        isIOSSafari,
+        isStandalone,
+        displayMode: window.matchMedia('(display-mode: standalone)').matches,
+        standalone: (window.navigator as any).standalone
+      });
       
       if (isIOSSafari) {
         // Check if the app is running as a PWA (installed to home screen)
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                            (window.navigator as any).standalone === true;
-        
         if (!isStandalone) {
           alert('To enable notifications on iPhone:\n\n1. Tap the Share button (square with arrow up)\n2. Select "Add to Home Screen"\n3. Open the app from your home screen\n4. Try enabling notifications again\n\nThis is required for iPhone notifications to work.');
           return;
         }
       }
       
+      console.log('Attempting to request notification permission...');
       const token = await requestNotificationPermission();
+      console.log('Permission result:', token);
+      
       if (token) {
         setNotificationPermission('granted');
         alert('Notifications enabled! You can now send sweet messages to your partner.');

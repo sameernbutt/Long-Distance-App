@@ -22,6 +22,8 @@ export interface NotificationData {
 // Request notification permission and get FCM token
 export const requestNotificationPermission = async (): Promise<string | null> => {
   try {
+    console.log('Starting notification permission request...');
+    
     // Check if notifications are supported
     if (!('Notification' in window)) {
       console.warn('This browser does not support notifications');
@@ -33,18 +35,24 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                         (window.navigator as any).standalone === true;
 
+    console.log('Browser detection:', { isIOSSafari, isStandalone });
+
     if (isIOSSafari && !isStandalone) {
       console.warn('iOS Safari requires the app to be installed as PWA for notifications');
       return null;
     }
 
+    console.log('Requesting notification permission...');
     const permission = await Notification.requestPermission();
+    console.log('Permission result:', permission);
+    
     if (permission !== 'granted') {
       console.warn('Notification permission denied');
       return null;
     }
 
     // Try FCM first (works on most browsers)
+    console.log('Attempting FCM token...');
     try {
       const token = await getToken(messaging, { vapidKey: VAPID_KEY });
       if (token) {
@@ -60,6 +68,7 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
     }
 
     // Fallback to Web Push (especially for iOS Safari)
+    console.log('Attempting Web Push subscription...');
     try {
       const user = auth.currentUser;
       if (user) {
@@ -71,6 +80,7 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
       console.warn('Web Push also failed:', e);
     }
 
+    console.log('All notification methods failed');
     return null;
   } catch (error) {
     console.error('An error occurred while enabling notifications:', error);
