@@ -22,9 +22,29 @@ export interface NotificationData {
 // Request notification permission and get FCM token
 export const requestNotificationPermission = async (): Promise<string | null> => {
   try {
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') return null;
+    // Check if notifications are supported
+    if (!('Notification' in window)) {
+      console.warn('This browser does not support notifications');
+      return null;
+    }
 
+    // Check if we're on iOS Safari and if the app is running as PWA
+    const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|OPiOS|mercury/.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                        (window.navigator as any).standalone === true;
+
+    if (isIOSSafari && !isStandalone) {
+      console.warn('iOS Safari requires the app to be installed as PWA for notifications');
+      return null;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      console.warn('Notification permission denied');
+      return null;
+    }
+
+    // Try FCM first (works on most browsers)
     try {
       const token = await getToken(messaging, { vapidKey: VAPID_KEY });
       if (token) {
@@ -32,16 +52,25 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
         if (user) {
           await updateDoc(doc(db, 'users', user.uid), { fcmToken: token });
         }
+        console.log('FCM token obtained successfully');
         return token;
       }
     } catch (e) {
       console.warn('FCM unsupported or failed, trying Web Push:', e);
+    }
+
+    // Fallback to Web Push (especially for iOS Safari)
+    try {
       const user = auth.currentUser;
       if (user) {
-        await registerWebPush(user.uid);
+        const subscription = await registerWebPush(user.uid);
+        console.log('Web Push subscription created successfully');
         return 'webpush';
       }
+    } catch (e) {
+      console.warn('Web Push also failed:', e);
     }
+
     return null;
   } catch (error) {
     console.error('An error occurred while enabling notifications:', error);

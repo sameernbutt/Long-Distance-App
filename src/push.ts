@@ -8,8 +8,8 @@ export async function registerWebPush(userId: string) {
     throw new Error('Web Push not supported in this browser');
   }
 
-  // Register service worker
-  const registration = await navigator.serviceWorker.register('/notification-sw.js');
+  // Register service worker (use the same one as Firebase messaging)
+  const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
 
   // Ask Notification permission first
   const permission = await Notification.requestPermission();
@@ -30,7 +30,7 @@ export async function registerWebPush(userId: string) {
 }
 
 export async function unregisterWebPush(userId: string) {
-  const registration = await navigator.serviceWorker.getRegistration('/notification-sw.js');
+  const registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
   if (!registration) return;
   const sub = await registration.pushManager.getSubscription();
   if (sub) await sub.unsubscribe();
