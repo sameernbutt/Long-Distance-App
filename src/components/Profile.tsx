@@ -182,9 +182,9 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
       </div>
 
       {/* Profile Information */}
-      <div className={`rounded-xl p-6 shadow-lg border mb-6 transition-colors ${
+      <div className={`rounded-xl p-6 shadow-lg border-2 mb-6 transition-colors ${
         isDarkMode 
-          ? 'bg-gray-900 border-gray-600' 
+          ? 'bg-black border-purple-900' 
           : 'bg-white border-gray-100'
       }`}>
         <div className="flex items-center justify-between mb-4">
@@ -290,9 +290,9 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
 
       {/* Anniversary Section */}
       {partnerId && (
-        <div className={`rounded-xl p-6 shadow-lg border mb-6 transition-colors ${
+        <div className={`rounded-xl p-6 shadow-lg border-2 mb-6 transition-colors ${
           isDarkMode 
-            ? 'bg-gray-900 border-gray-600' 
+            ? 'bg-black border-pink-900' 
             : 'bg-white border-gray-100'
         }`}>
           <div className="flex items-center justify-between mb-4">
@@ -392,9 +392,9 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
 
       {/* Partner Connection */}
       {!partnerId && (
-        <div className={`rounded-xl p-6 shadow-lg border mb-6 transition-colors ${
+        <div className={`rounded-xl p-6 shadow-lg border-2 mb-6 transition-colors ${
           isDarkMode 
-            ? 'bg-gray-900 border-gray-600' 
+            ? 'bg-black border-pink-900' 
             : 'bg-white border-gray-100'
         }`}>
           <div className="text-center">
@@ -416,9 +416,9 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
       )}
 
       {/* Account Actions */}
-      <div className={`rounded-xl p-6 shadow-lg border transition-colors ${
+      <div className={`rounded-xl p-6 shadow-lg border-2 transition-colors ${
         isDarkMode 
-          ? 'bg-gray-900 border-gray-600' 
+          ? 'bg-black border-purple-900' 
           : 'bg-white border-gray-100'
       }`}>
         <h3 className={`text-lg font-semibold mb-4 transition-colors ${
@@ -451,7 +451,7 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className={`rounded-xl max-w-md w-full p-6 transition-colors ${
             isDarkMode 
-              ? 'bg-gray-900 border border-gray-600' 
+              ? 'bg-black border-2 border-red-900' 
               : 'bg-white'
           }`}>
             <div className="text-center mb-6">

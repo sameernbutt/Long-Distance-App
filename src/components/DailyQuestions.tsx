@@ -107,15 +107,15 @@ export default function DailyQuestions({ isDarkMode = false }: DailyQuestionsPro
         <h2 className={`text-2xl md:text-3xl font-bold mb-2 transition-colors ${
           isDarkMode ? 'text-white' : 'text-gray-800'
         }`}>Daily Question</h2>
-        <p className={`text-sm md:text-base transition-colors ${
+        {/* <p className={`text-sm md:text-base transition-colors ${
           isDarkMode ? 'text-gray-400' : 'text-gray-600'
-        }`}>Connect deeper with thoughtful questions</p>
+        }`}>Connect deeper with thoughtful questions</p> */}
       </div>
 
       <div className="max-w-2xl mx-auto">
-        <div className={`rounded-xl p-4 md:p-6 mb-6 border transition-colors ${
+        <div className={`rounded-xl p-4 md:p-6 mb-6 border-2 transition-colors ${
           isDarkMode 
-            ? 'bg-gray-900' 
+            ? 'bg-black border-pink-900' 
             : 'bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200'
         }`}>
           <div className="flex items-start space-x-3 mb-4">
@@ -187,9 +187,9 @@ export default function DailyQuestions({ isDarkMode = false }: DailyQuestionsPro
 
         {/* Answers Display */}
         {Object.keys(coupleAnswers).length > 0 && (
-          <div className={`rounded-xl p-4 md:p-6 shadow-lg border transition-colors ${
+          <div className={`rounded-xl p-4 md:p-6 shadow-lg border-2 transition-colors ${
             isDarkMode 
-              ? 'bg-gray-900 border-gray-600' 
+              ? 'bg-black border-pink-900' 
               : 'bg-white border-gray-100'
           }`}>
             <h4 className={`font-semibold mb-4 transition-colors ${

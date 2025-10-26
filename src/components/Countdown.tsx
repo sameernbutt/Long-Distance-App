@@ -179,9 +179,6 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
         <h2 className={`text-2xl md:text-3xl font-bold mb-2 transition-colors ${
           isDarkMode ? 'text-white' : 'text-gray-800'
         }`}>Countdown to Reunion</h2>
-        <p className={`text-sm md:text-base transition-colors ${
-          isDarkMode ? 'text-gray-400' : 'text-gray-600'
-        }`}>Count down the days until you're together again</p>
       </div>
 
       <div className="max-w-2xl mx-auto">
@@ -193,9 +190,9 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
             }`}>Loading reunion data...</p>
           </div>
         ) : isGuest ? (
-          <div className={`rounded-xl p-6 shadow-lg border text-center transition-colors ${
+          <div className={`rounded-xl p-6 shadow-lg border-2 text-center transition-colors ${
             isDarkMode 
-              ? 'bg-gray-900 border-gray-600' 
+              ? 'bg-black border-purple-900' 
               : 'bg-white border-gray-100'
           }`}>
             <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -207,9 +204,9 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
             }`}>Create an account to set and share countdown timers with your partner</p>
           </div>
         ) : !partnerId ? (
-          <div className={`rounded-xl p-6 shadow-lg border text-center transition-colors ${
+          <div className={`rounded-xl p-6 shadow-lg border-2 text-center transition-colors ${
             isDarkMode 
-              ? 'bg-gray-900 border-gray-600' 
+              ? 'bg-black border-purple-900' 
               : 'bg-white border-gray-100'
           }`}>
             <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -221,9 +218,9 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
             }`}>Pair with your partner to set and share reunion countdowns together</p>
           </div>
         ) : !countdownData.date && !isEditing ? (
-          <div className={`rounded-xl p-6 shadow-lg border text-center transition-colors ${
+          <div className={`rounded-xl p-6 shadow-lg border-2 text-center transition-colors ${
             isDarkMode 
-              ? 'bg-gray-900 border-gray-600' 
+              ? 'bg-black border-purple-900' 
               : 'bg-white border-gray-100'
           }`}>
             <button
@@ -235,9 +232,9 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
             </button>
           </div>
         ) : isEditing ? (
-          <div className={`rounded-xl p-6 shadow-lg border mb-8 transition-colors ${
+          <div className={`rounded-xl p-6 shadow-lg border-2 mb-8 transition-colors ${
             isDarkMode 
-              ? 'bg-gray-900 border-gray-600' 
+              ? 'bg-black border-purple-900' 
               : 'bg-white border-gray-100'
           }`}>
             <h3 className={`text-xl font-bold mb-6 transition-colors ${
@@ -256,9 +253,9 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
                   value={editData.title}
                   onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="e.g., Next Meeting, Vacation Together, etc."
-                  className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
+                  className={`w-full p-3 border-2 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      ? 'bg-black border-purple-900 text-white placeholder-gray-500' 
                       : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
                   }`}
                 />
@@ -274,9 +271,9 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
                   type="datetime-local"
                   value={editData.date}
                   onChange={(e) => setEditData(prev => ({ ...prev, date: e.target.value }))}
-                  className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
+                  className={`w-full p-3 border-2 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      ? 'bg-black border-purple-900 text-white' 
                       : 'bg-white border-gray-200 text-gray-900'
                   }`}
                 />
@@ -293,9 +290,9 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
                   value={editData.location}
                   onChange={(e) => setEditData(prev => ({ ...prev, location: e.target.value }))}
                   placeholder="e.g., Paris, My hometown, etc."
-                  className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
+                  className={`w-full p-3 border-2 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      ? 'bg-black border-purple-900 text-white placeholder-gray-500' 
                       : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
                   }`}
                 />
@@ -317,10 +314,10 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
                     setShowSetReunion(false);
                     setEditData(countdownData);
                   }}
-                  className={`px-6 py-3 rounded-xl transition-colors ${
+                  className={`px-6 py-3 rounded-xl border-2 transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-black border-purple-900 text-gray-300 hover:border-purple-800' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200'
                   }`}
                 >
                   Cancel
@@ -388,9 +385,9 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
             </div>
 
             {/* Countdown Timer */}
-            <div className={`rounded-xl p-6 shadow-lg border transition-colors ${
+            <div className={`rounded-xl p-6 shadow-lg border-2 transition-colors ${
               isDarkMode 
-                ? 'bg-gray-900 border-gray-600' 
+                ? 'bg-black border-purple-900' 
                 : 'bg-white border-gray-100'
             }`}>
               {timeLeft.days > 0 ? (
@@ -445,10 +442,10 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
         {/* Cancel Confirmation Modal */}
         {showCancelConfirm && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className={`rounded-xl p-6 max-w-md w-full transition-colors ${
+            <div className={`rounded-xl p-6 max-w-md w-full border-2 transition-colors ${
               isDarkMode 
-                ? 'bg-gray-900 border border-gray-600' 
-                : 'bg-white'
+                ? 'bg-black border-purple-900' 
+                : 'bg-white border-gray-200'
             }`}>
               <h3 className={`text-lg font-bold mb-4 transition-colors ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
@@ -459,10 +456,10 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
               <div className="flex space-x-3">
                 <button
                   onClick={() => setShowCancelConfirm(false)}
-                  className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
+                  className={`flex-1 py-2 px-4 rounded-lg border-2 transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-black border-purple-900 text-gray-300 hover:border-purple-800' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200'
                   }`}
                 >
                   Keep Reunion

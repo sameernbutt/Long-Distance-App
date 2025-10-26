@@ -178,9 +178,9 @@ export default function Games({ isDarkMode = false }: GamesProps) {
 
         {/* Active Game */}
         {activeGame && (
-          <div className={`rounded-xl p-4 md:p-6 shadow-lg border mb-6 transition-colors ${
+          <div className={`rounded-xl p-4 md:p-6 shadow-lg border-2 mb-6 transition-colors ${
             isDarkMode 
-              ? 'bg-gray-900 border-gray-600' 
+              ? 'bg-black border-purple-900' 
               : 'bg-white border-gray-100'
           }`}>
             <div className="text-center mb-6">
@@ -211,10 +211,10 @@ export default function Games({ isDarkMode = false }: GamesProps) {
             <div className="flex flex-wrap gap-3 justify-center">
               <button
                 onClick={() => setActiveGame(null)}
-                className={`px-4 md:px-6 py-2 rounded-xl active:scale-95 transition-all text-sm md:text-base ${
+                className={`px-4 md:px-6 py-2 rounded-xl border-2 active:scale-95 transition-all text-sm md:text-base ${
                   isDarkMode 
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-black border-purple-900 text-gray-300 hover:border-purple-800' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200'
                 }`}
               >
                 Back to Games
