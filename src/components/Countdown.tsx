@@ -179,9 +179,6 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
         <h2 className={`text-2xl md:text-3xl font-bold mb-2 transition-colors ${
           isDarkMode ? 'text-white' : 'text-gray-800'
         }`}>Countdown to Reunion</h2>
-        <p className={`text-sm md:text-base transition-colors ${
-          isDarkMode ? 'text-gray-400' : 'text-gray-600'
-        }`}>Count down the days until you're together again</p>
       </div>
 
       <div className="max-w-2xl mx-auto">
