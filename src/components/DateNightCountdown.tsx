@@ -184,7 +184,7 @@ export default function DateNightCountdown({ isDarkMode = false }: DateNightCoun
     return (
       <div className={`p-6 rounded-xl mb-6 transition-colors ${
         isDarkMode 
-          ? 'bg-gradient-to-r from-gray-800 to-gray-700' 
+          ? 'bg-black border-2 border-purple-900' 
           : 'bg-gradient-to-r from-pink-100 to-purple-100'
       }`}>
         <div className="text-center">
@@ -204,7 +204,7 @@ export default function DateNightCountdown({ isDarkMode = false }: DateNightCoun
     return (
       <div className={`p-6 rounded-xl mb-6 transition-colors ${
         isDarkMode 
-          ? 'bg-gradient-to-r from-gray-800 to-gray-700' 
+          ? 'bg-black border-2 border-purple-900' 
           : 'bg-gradient-to-r from-pink-100 to-purple-100'
       }`}>
         <div className="text-center">
@@ -221,7 +221,7 @@ export default function DateNightCountdown({ isDarkMode = false }: DateNightCoun
     return (
       <div className={`p-6 rounded-xl mb-6 transition-colors ${
         isDarkMode 
-          ? 'bg-gradient-to-r from-gray-800 to-gray-700' 
+          ? 'bg-black border-2 border-purple-900' 
           : 'bg-gradient-to-r from-pink-100 to-purple-100'
       }`}>
         <div className="text-center">
@@ -242,7 +242,7 @@ export default function DateNightCountdown({ isDarkMode = false }: DateNightCoun
   return (
     <div className={`p-6 rounded-xl mb-6 transition-colors ${
       isDarkMode 
-        ? 'bg-gradient-to-r from-gray-800 to-gray-700' 
+        ? 'bg-black border-2 border-purple-900' 
         : 'bg-gradient-to-r from-pink-100 to-purple-100'
     }`}>
       {hasActiveCountdown ? (
@@ -334,10 +334,10 @@ export default function DateNightCountdown({ isDarkMode = false }: DateNightCoun
           <Heart className="w-12 h-12 text-pink-500 mx-auto mb-4" />
           <h2 className={`text-xl font-bold mb-2 transition-colors ${
             isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>Plan Your Next Date Night</h2>
-          <p className={`mb-4 transition-colors ${
+          }`}>Countdown to Your Next Date Night</h2>
+          {/* <p className={`mb-4 transition-colors ${
             isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>Set a countdown for your next virtual date!</p>
+          }`}>Set a countdown for your next virtual date!</p> */}
           <button
             onClick={() => setShowSetDateNight(true)}
             className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors mx-auto ${
