@@ -355,8 +355,8 @@ export default function DateNightCountdown({ isDarkMode = false }: DateNightCoun
       {/* Set/Edit Date Night Modal */}
       {(showSetDateNight || isEditing) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className={`rounded-xl p-6 w-full max-w-md transition-colors ${
-            isDarkMode ? 'bg-gray-800' : 'bg-white'
+          <div className={`rounded-xl p-6 w-full max-w-md border-2 transition-colors ${
+            isDarkMode ? 'bg-black border-purple-900' : 'bg-white'
           }`}>
             <h3 className={`text-xl font-bold mb-4 transition-colors ${
               isDarkMode ? 'text-white' : 'text-gray-800'
@@ -475,8 +475,8 @@ export default function DateNightCountdown({ isDarkMode = false }: DateNightCoun
       {/* Cancel Confirmation Modal */}
       {showCancelConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className={`rounded-xl p-6 w-full max-w-sm transition-colors ${
-            isDarkMode ? 'bg-gray-800' : 'bg-white'
+          <div className={`rounded-xl p-6 w-full max-w-sm border-2 transition-colors ${
+            isDarkMode ? 'bg-black border-purple-900' : 'bg-white'
           }`}>
             <h3 className={`text-lg font-bold mb-4 transition-colors ${
               isDarkMode ? 'text-white' : 'text-gray-800'

@@ -287,15 +287,11 @@ function AppContent() {
   // Show loading screen while checking authentication (only briefly)
   if (loading) {
     return (
-      // <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 flex items-center justify-center">
-      <div className={`min-h-screen flex items-center justify-center transition-colors ${
-        isDarkMode ? 'bg-black' : 'bg-white'
-      }`}>
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="p-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full w-fit mx-auto mb-4 animate-pulse">
             <Heart className="w-8 h-8 text-white fill-current" />
           </div>
-          {/* <p className="text-gray-600">Loading...</p> */}
         </div>
       </div>
     );
@@ -329,9 +325,9 @@ function AppContent() {
     switch (activeTab) {
       case 'home':
         return (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Relationship Status Header */}
-            <div className="text-center py-4">
+            <div className="text-center py-2">
               {partnerId && partnerProfile && userProfile ? (
                 <div className={`inline-flex items-center space-x-2 px-4 py-2 ${
                       isDarkMode ? 'bg-black rounded-full border border-pink-900' : 'bg-gradient-to-r from-pink-50 to-purple-50 rounded-full border border-pink-200'
@@ -358,11 +354,11 @@ function AppContent() {
             
             {/* Notification Button */}
             {partnerId && (
-              <div className="p-4 md:p-6">
+              <div className="px-4 md:px-6">
                 <div className="max-w-2xl mx-auto">
-                  <div className={`rounded-xl p-6 shadow-lg border text-center transition-colors ${
+                  <div className={`rounded-xl p-4 md:p-6 shadow-lg border-2 text-center transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-900 border-gray-700' 
+                      ? 'bg-black border-pink-900' 
                       : 'bg-white border-gray-100'
                   }`}>
                     <Bell className="w-12 h-12 text-pink-500 mx-auto mb-4" />
@@ -456,8 +452,12 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
       {/* Modals for sharing */}
       {showPhoto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl p-4 w-full max-w-md relative">
-            <button className="absolute top-2 right-2 text-gray-400 hover:text-pink-500" onClick={() => setShowPhoto(false)}>
+          <div className={`rounded-xl shadow-xl p-4 w-full max-w-md relative border-2 ${
+            isDarkMode ? 'bg-black border-pink-900' : 'bg-white border-gray-200'
+          }`}>
+            <button className={`absolute top-2 right-2 transition-colors ${
+              isDarkMode ? 'text-gray-400 hover:text-pink-400' : 'text-gray-400 hover:text-pink-500'
+            }`} onClick={() => setShowPhoto(false)}>
               <X className="w-5 h-5" />
             </button>
             <PhotoGallery />
@@ -466,8 +466,12 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
       )}
       {showVideo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl p-4 w-full max-w-md relative">
-            <button className="absolute top-2 right-2 text-gray-400 hover:text-purple-500" onClick={() => setShowVideo(false)}>
+          <div className={`rounded-xl shadow-xl p-4 w-full max-w-md relative border-2 ${
+            isDarkMode ? 'bg-black border-purple-900' : 'bg-white border-gray-200'
+          }`}>
+            <button className={`absolute top-2 right-2 transition-colors ${
+              isDarkMode ? 'text-gray-400 hover:text-purple-400' : 'text-gray-400 hover:text-purple-500'
+            }`} onClick={() => setShowVideo(false)}>
               <X className="w-5 h-5" />
             </button>
             <VideoSharing />
@@ -476,8 +480,12 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
       )}
       {showMusic && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl p-4 w-full max-w-md relative">
-            <button className="absolute top-2 right-2 text-gray-400 hover:text-blue-500" onClick={() => setShowMusic(false)}>
+          <div className={`rounded-xl shadow-xl p-4 w-full max-w-md relative border-2 ${
+            isDarkMode ? 'bg-black border-blue-900' : 'bg-white border-gray-200'
+          }`}>
+            <button className={`absolute top-2 right-2 transition-colors ${
+              isDarkMode ? 'text-gray-400 hover:text-blue-400' : 'text-gray-400 hover:text-blue-500'
+            }`} onClick={() => setShowMusic(false)}>
               <X className="w-5 h-5" />
             </button>
             <MusicSharing />
@@ -515,17 +523,17 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
       {/* Header */}
       <header className={`backdrop-blur-md border-b sticky top-0 z-40 safe-area-top transition-colors duration-300 ${
         isDarkMode 
-          ? 'bg-gray-900/80 border-gray-700' 
+          ? 'bg-black/80 border-purple-900' 
           : 'bg-white/80 border-pink-200'
       }`}>
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`p-2 rounded-xl transition-colors ${
+              className={`p-2 rounded-xl transition-colors inline-flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
                 isDarkMode 
-                  ? 'text-gray-300 hover:bg-gray-700' 
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'text-gray-300 hover:bg-gray-700 focus-visible:ring-purple-500' 
+                  : 'text-gray-700 hover:bg-gray-100 focus-visible:ring-pink-500'
               }`}
             >
               <Menu className="w-5 h-5" />
@@ -560,8 +568,8 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
         
         {/* Sliding menu */}
         <div 
-          className={`absolute left-0 top-0 h-full w-80 max-w-[85vw] shadow-xl transform transition-transform duration-300 ease-out ${
-            isDarkMode ? 'bg-gray-900' : 'bg-white'
+          className={`absolute left-0 top-0 h-full w-80 max-w-[85vw] shadow-xl transform transition-transform duration-300 ease-out border-r-2 ${
+            isDarkMode ? 'bg-black border-purple-900' : 'bg-white'
           } ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -700,10 +708,10 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
       </main>
 
       {/* Bottom Navigation - Mobile Only */}
-      <nav className={`fixed bottom-0 left-0 right-0 backdrop-blur-md border-t z-30 safe-area-bottom md:hidden transition-colors ${
+      <nav className={`fixed bottom-0 left-0 right-0 border-t z-30 safe-area-bottom md:hidden transition-colors ${
         isDarkMode 
-          ? 'bg-gray-900/90 border-gray-700' 
-          : 'bg-white/90 border-pink-200'
+          ? 'bg-black border-gray-800' 
+          : 'bg-white border-pink-200'
       }`}>
         <div className="grid grid-cols-5 gap-1 px-1 py-2">
           {tabs.map((tab) => {
@@ -715,14 +723,14 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
                 className={`flex flex-col items-center space-y-1 py-2 px-1 rounded-lg transition-colors ${
                   activeTab === tab.id
                     ? isDarkMode 
-                      ? 'bg-gradient-to-r from-pink-900/30 to-purple-900/30 text-pink-400'
-                      : 'bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700'
+                      ? 'bg-pink-600 text-white'
+                      : 'bg-gradient-to-r from-pink-500 to-purple-500 text-white'
                     : isDarkMode
                       ? 'text-gray-400 hover:text-pink-400'
                       : 'text-gray-600 hover:text-pink-600'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${activeTab === tab.id ? tab.color : ''}`} />
+                <Icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-white' : ''}`} />
                 <span className="text-xs font-medium leading-tight">{tab.label}</span>
               </button>
             );

@@ -334,9 +334,9 @@ export default function VirtualDates({ isDarkMode = false }: VirtualDatesProps) 
 
       {/* Show authentication or pairing requirement */}
       {!user ? (
-        <div className={`max-w-md mx-auto rounded-xl p-6 shadow-lg border text-center transition-colors ${
+        <div className={`max-w-md mx-auto rounded-xl p-6 shadow-lg border-2 text-center transition-colors ${
           isDarkMode 
-            ? 'bg-gray-900 border-gray-600' 
+            ? 'bg-black border-pink-900' 
             : 'bg-white border-gray-100'
         }`}>
           <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -348,9 +348,9 @@ export default function VirtualDates({ isDarkMode = false }: VirtualDatesProps) 
           }`}>Sign in to create and sync your bucket list with your partner</p>
         </div>
       ) : !partnerId && !loading ? (
-        <div className={`max-w-md mx-auto rounded-xl p-6 shadow-lg border text-center transition-colors ${
+        <div className={`max-w-md mx-auto rounded-xl p-6 shadow-lg border-2 text-center transition-colors ${
           isDarkMode 
-            ? 'bg-gray-900 border-gray-600' 
+            ? 'bg-black border-pink-900' 
             : 'bg-white border-gray-100'
         }`}>
           <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -362,9 +362,9 @@ export default function VirtualDates({ isDarkMode = false }: VirtualDatesProps) 
           }`}>Pair with your partner to create and share a bucket list together</p>
         </div>
       ) : loading ? (
-        <div className={`max-w-md mx-auto rounded-xl p-6 shadow-lg border text-center transition-colors ${
+        <div className={`max-w-md mx-auto rounded-xl p-6 shadow-lg border-2 text-center transition-colors ${
           isDarkMode 
-            ? 'bg-gray-900 border-gray-600' 
+            ? 'bg-black border-pink-900' 
             : 'bg-white border-gray-100'
         }`}>
           <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />

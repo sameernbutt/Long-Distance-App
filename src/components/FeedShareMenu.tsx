@@ -21,9 +21,9 @@ const FeedShareMenu: React.FC<Props> = ({ onSharePhoto, onShareVideo, onShareMus
         <Plus className="w-6 h-6" />
       </button>
       {open && (
-        <div className={`absolute right-0 mt-2 w-44 rounded-xl shadow-lg z-10 border transition-colors ${
+        <div className={`absolute right-0 mt-2 w-44 rounded-xl shadow-lg z-10 border-2 transition-colors ${
           isDarkMode 
-            ? 'bg-gray-900 border-gray-600' 
+            ? 'bg-black border-pink-900' 
             : 'bg-white border-pink-100'
         }`}>
           <button
