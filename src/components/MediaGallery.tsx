@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Camera, Upload, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Image as ImageIcon, RotateCcw, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { addFeedItem, uploadFile } from '../firebase/feed';
 import { getPartnerId } from '../firebase/moods';
@@ -10,9 +10,10 @@ export default function MediaGallery() {
   const [isUploading, setIsUploading] = useState(false);
   const [caption, setCaption] = useState('');
   const [partnerId, setPartnerId] = useState<string | null>(null);
-  const [uploadedMedia, setUploadedMedia] = useState<{url: string, file: File, type: 'photo' | 'video'} | null>(null);
+  const [capturedMedia, setCapturedMedia] = useState<{url: string, file: File, type: 'photo' | 'video'} | null>(null);
   const [isSharing, setIsSharing] = useState(false);
-  const [showCamera, setShowCamera] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load partner ID
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function MediaGallery() {
     loadData();
   }, [user?.uid]);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     
     // Always reset the input to allow selecting the same file again
@@ -43,211 +44,188 @@ export default function MediaGallery() {
       return;
     }
 
-    setIsUploading(true);
+    // Create local URL for immediate preview
+    const mediaUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        resolve(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    });
 
-    try {
-      let mediaUrl: string;
-      
-      if (partnerId) {
-        // Upload to Firebase Storage
-        const uploadPromise = uploadFile(file, user.uid);
-        const timeoutPromise = new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('Upload timeout')), 60000) // 60s for videos
-        );
-        
-        try {
-          mediaUrl = await Promise.race([uploadPromise, timeoutPromise]);
-        } catch (uploadError) {
-          if (uploadError instanceof Error && uploadError.message === 'Upload timeout') {
-            alert('Upload is taking too long. Please check your connection and try again.');
-          } else {
-            alert(`Failed to upload ${isVideo ? 'video' : 'photo'} to storage. Please try again.`);
-          }
-          setIsUploading(false);
-          return;
-        }
-      } else {
-        // Use local URL for immediate preview
-        mediaUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            resolve(e.target?.result as string);
-          };
-          reader.readAsDataURL(file);
-        });
-      }
-
-      // Store uploaded media for preview and sharing
-      setUploadedMedia({ url: mediaUrl, file, type: isVideo ? 'video' : 'photo' });
-      setCaption('');
-    } catch (error) {
-      console.error('Error uploading media:', error);
-      alert(`Failed to upload ${file.type.startsWith('video/') ? 'video' : 'photo'}. Please try again.`);
-    } finally {
-      setIsUploading(false);
-    }
+    // Show preview screen
+    setCapturedMedia({ url: mediaUrl, file, type: isVideo ? 'video' : 'photo' });
+    setShowPreview(true);
+    setCaption('');
   };
 
   const handleCameraCapture = async (file: File) => {
-    setShowCamera(false);
-    
     if (!user?.uid) return;
 
     // Determine if it's a photo or video based on mime type
     const isVideo = file.type.startsWith('video/');
 
+    // Create local URL for immediate preview
+    const mediaUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        resolve(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Show preview screen
+    setCapturedMedia({ url: mediaUrl, file, type: isVideo ? 'video' : 'photo' });
+    setShowPreview(true);
+    setCaption('');
+  };
+
+  const handleRetake = () => {
+    setCapturedMedia(null);
+    setShowPreview(false);
+    setCaption('');
+  };
+
+  const handleApproveAndShare = async () => {
+    if (!capturedMedia || !user?.uid || !partnerId) return;
+
+    setIsSharing(true);
     setIsUploading(true);
 
     try {
-      let mediaUrl: string;
-      
-      if (partnerId) {
-        // Upload to Firebase Storage
-        mediaUrl = await uploadFile(file, user.uid);
-      } else {
-        // Use local URL for immediate preview
-        mediaUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            resolve(e.target?.result as string);
-          };
-          reader.readAsDataURL(file);
-        });
-      }
+      // Upload to Firebase Storage
+      const mediaUrl = await uploadFile(capturedMedia.file, user.uid);
 
-      // Store uploaded media for preview and sharing
-      setUploadedMedia({ url: mediaUrl, file, type: isVideo ? 'video' : 'photo' });
-      setCaption('');
-    } catch (error) {
-      console.error('Error processing captured media:', error);
-      alert(`Failed to process ${isVideo ? 'video' : 'photo'}. Please try again.`);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleShareMedia = async () => {
-    if (!uploadedMedia || !user?.uid || !partnerId) return;
-
-    setIsSharing(true);
-
-    try {
+      // Add to feed
       const result = await addFeedItem(
         user.uid,
         userProfile?.displayName || user.email || 'Unknown User',
         userProfile?.photoURL || null,
-        uploadedMedia.type,
-        uploadedMedia.url,
+        capturedMedia.type,
+        mediaUrl,
         caption.trim() || `Shared with love 💕`
       );
       
       if (result.error) {
         console.error('Failed to share media:', result.error);
-        alert(`Failed to share ${uploadedMedia.type}. Please try again.`);
+        alert(`Failed to share ${capturedMedia.type}. Please try again.`);
       } else {
-        // Success - reset upload state
-        setUploadedMedia(null);
+        // Success - reset state
+        setCapturedMedia(null);
+        setShowPreview(false);
         setCaption('');
       }
     } catch (error) {
       console.error('Error sharing media:', error);
-      alert(`Failed to share ${uploadedMedia.type}. Please try again.`);
+      alert(`Failed to share ${capturedMedia.type}. Please try again.`);
     } finally {
       setIsSharing(false);
+      setIsUploading(false);
     }
   };
 
-  return (
-    <div className="space-y-4">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">Share Photo/Video</h3>
-      
-      {/* Upload Preview */}
-      {uploadedMedia && (
-        <div className="space-y-3">
-          <div className="relative rounded-lg overflow-hidden bg-gray-100">
-            {uploadedMedia.type === 'photo' ? (
-              <img 
-                src={uploadedMedia.url} 
-                alt="Upload preview" 
-                className="w-full h-64 object-contain"
-              />
-            ) : (
-              <video 
-                src={uploadedMedia.url} 
-                controls 
-                className="w-full h-64 object-contain"
-              />
-            )}
-            <button
-              onClick={() => setUploadedMedia(null)}
-              className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          
+  // If showing preview, render preview screen
+  if (showPreview && capturedMedia) {
+    return (
+      <div className="fixed inset-0 bg-black z-50 flex flex-col">
+        {/* Preview Header */}
+        <div className="flex justify-between items-center p-4 bg-gradient-to-b from-black/90 to-transparent text-white shrink-0">
+          <h3 className="text-lg font-semibold drop-shadow-lg">Preview</h3>
+        </div>
+
+        {/* Media Preview */}
+        <div className="flex-1 relative overflow-hidden bg-black flex items-center justify-center">
+          {capturedMedia.type === 'photo' ? (
+            <img 
+              src={capturedMedia.url} 
+              alt="Captured preview" 
+              className="max-w-full max-h-full object-contain"
+            />
+          ) : (
+            <video 
+              src={capturedMedia.url} 
+              controls 
+              autoPlay
+              className="max-w-full max-h-full object-contain rounded-lg"
+            />
+          )}
+        </div>
+
+        {/* Caption Input */}
+        <div className="px-4 py-3 bg-gradient-to-t from-black/90 via-black/70 to-transparent">
           <input
             type="text"
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
             placeholder="Add a caption..."
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+            className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/60 focus:ring-2 focus:ring-pink-500 focus:border-transparent focus:bg-white/15 transition-all shadow-lg"
           />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="px-6 py-6 pb-8 bg-black/90 flex justify-around items-center shrink-0 gap-4">
+          <button
+            onClick={handleRetake}
+            disabled={isSharing || isUploading}
+            className="flex flex-col items-center justify-center space-y-2 p-4 rounded-2xl bg-white/10 backdrop-blur-sm hover:bg-white/20 active:bg-white/30 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px] active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-lg"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+          >
+            <RotateCcw className="w-7 h-7 text-white drop-shadow-lg" />
+            <span className="text-sm font-medium text-white">Retake</span>
+          </button>
           
           <button
-            onClick={handleShareMedia}
-            disabled={isSharing}
-            className={`w-full py-2 rounded-lg font-medium transition-colors ${
-              isSharing 
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                : 'bg-pink-500 text-white hover:bg-pink-600'
-            }`}
+            onClick={handleApproveAndShare}
+            disabled={isSharing || isUploading}
+            className="flex flex-col items-center justify-center space-y-2 p-4 rounded-2xl bg-gradient-to-br from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 active:from-pink-700 active:to-pink-800 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px] active:scale-95 focus:outline-none focus:ring-2 focus:ring-pink-400 shadow-xl"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            {isSharing ? 'Sharing...' : `Share ${uploadedMedia.type === 'photo' ? 'Photo' : 'Video'}`}
+            {isSharing || isUploading ? (
+              <>
+                <div className="animate-spin rounded-full h-7 w-7 border-2 border-white border-t-transparent"></div>
+                <span className="text-sm font-medium text-white">Sharing...</span>
+              </>
+            ) : (
+              <>
+                <Check className="w-7 h-7 text-white drop-shadow-lg" />
+                <span className="text-sm font-medium text-white">Share</span>
+              </>
+            )}
           </button>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {/* Upload Options */}
-      {!uploadedMedia && (
-        <div className="grid grid-cols-2 gap-3">
-          <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-pink-400 hover:bg-pink-50 transition-colors">
-            <Upload className="w-8 h-8 text-gray-400 mb-2" />
-            <span className="text-sm text-gray-600">Upload</span>
-            <input
-              type="file"
-              accept="image/*,video/*"
-              onChange={handleFileUpload}
-              disabled={isUploading}
-              className="hidden"
-            />
-          </label>
-          
-          <button
-            onClick={() => setShowCamera(true)}
-            disabled={isUploading}
-            className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-pink-400 hover:bg-pink-50 transition-colors"
-          >
-            <Camera className="w-8 h-8 text-gray-400 mb-2" />
-            <span className="text-sm text-gray-600">Camera</span>
-          </button>
-        </div>
-      )}
+  // Main camera view with gallery access
+  return (
+    <>
+      {/* Hidden file input for camera roll access */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,video/*"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
 
-      {isUploading && (
-        <div className="text-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto"></div>
-          <p className="text-sm text-gray-600 mt-2">Uploading...</p>
-        </div>
-      )}
-
-      {/* Camera Interface */}
-      {showCamera && (
+      {/* Camera Interface with gallery button overlay */}
+      <div className="relative">
         <CameraInterface
           onCapture={handleCameraCapture}
-          onClose={() => setShowCamera(false)}
+          onClose={() => {}} // Don't allow closing from camera, only from parent
         />
-      )}
-    </div>
+        
+        {/* Gallery Access Button (bottom-left overlay) */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="fixed bottom-20 left-4 z-[60] p-3 rounded-xl bg-white/15 backdrop-blur-md border border-white/30 hover:bg-white/25 active:bg-white/35 transition-all duration-150 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-xl"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+          aria-label="Open camera roll"
+        >
+          <ImageIcon className="w-6 h-6 text-white drop-shadow-lg" />
+        </button>
+      </div>
+    </>
   );
 }

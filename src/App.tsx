@@ -447,17 +447,17 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
 
       {/* Modals for sharing */}
       {showPhotoVideo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className={`rounded-xl shadow-xl p-4 w-full max-w-md relative border-2 ${
-            isDarkMode ? 'bg-black border-pink-900' : 'bg-white border-gray-200'
-          }`}>
-            <button className={`absolute top-2 right-2 z-10 transition-colors ${
-              isDarkMode ? 'text-gray-400 hover:text-pink-400' : 'text-gray-400 hover:text-pink-500'
-            }`} onClick={() => setShowPhotoVideo(false)}>
-              <X className="w-5 h-5" />
-            </button>
-            <MediaGallery />
-          </div>
+        <div className="fixed inset-0 z-50">
+          {/* Close button overlay */}
+          <button 
+            className="fixed top-4 right-4 z-[70] p-3 rounded-full bg-white/15 backdrop-blur-md border border-white/30 text-white hover:bg-white/25 active:bg-white/35 transition-all duration-150 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-xl"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            onClick={() => setShowPhotoVideo(false)}
+            aria-label="Close"
+          >
+            <X className="w-6 h-6 drop-shadow-lg" />
+          </button>
+          <MediaGallery />
         </div>
       )}
       {showMusic && (
