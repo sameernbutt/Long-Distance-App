@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { Plus, Image, Video, Music } from 'lucide-react';
+import { Plus, Camera, Music } from 'lucide-react';
 
 interface Props {
-  onSharePhoto: () => void;
-  onShareVideo: () => void;
+  onSharePhotoVideo: () => void;
   onShareMusic: () => void;
   isDarkMode?: boolean;
 }
 
-const FeedShareMenu: React.FC<Props> = ({ onSharePhoto, onShareVideo, onShareMusic, isDarkMode = false }) => {
+const FeedShareMenu: React.FC<Props> = ({ onSharePhotoVideo, onShareMusic, isDarkMode = false }) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -21,7 +20,7 @@ const FeedShareMenu: React.FC<Props> = ({ onSharePhoto, onShareVideo, onShareMus
         <Plus className="w-6 h-6" />
       </button>
       {open && (
-        <div className={`absolute right-0 mt-2 w-44 rounded-xl shadow-lg z-10 border-2 transition-colors ${
+        <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-lg z-10 border-2 transition-colors ${
           isDarkMode 
             ? 'bg-black border-pink-900' 
             : 'bg-white border-pink-100'
@@ -32,19 +31,9 @@ const FeedShareMenu: React.FC<Props> = ({ onSharePhoto, onShareVideo, onShareMus
                 ? 'text-gray-300 hover:bg-gray-700' 
                 : 'text-gray-700 hover:bg-pink-50'
             }`}
-            onClick={() => { setOpen(false); onSharePhoto(); }}
+            onClick={() => { setOpen(false); onSharePhotoVideo(); }}
           >
-            <Image className="w-5 h-5 mr-2 text-pink-500" /> Share Photo
-          </button>
-          <button
-            className={`flex items-center w-full px-4 py-2 transition-colors ${
-              isDarkMode 
-                ? 'text-gray-300 hover:bg-gray-700' 
-                : 'text-gray-700 hover:bg-pink-50'
-            }`}
-            onClick={() => { setOpen(false); onShareVideo(); }}
-          >
-            <Video className="w-5 h-5 mr-2 text-purple-500" /> Share Video
+            <Camera className="w-5 h-5 mr-2 text-pink-500" /> Photo/Video
           </button>
           <button
             className={`flex items-center w-full px-4 py-2 rounded-b-xl transition-colors ${

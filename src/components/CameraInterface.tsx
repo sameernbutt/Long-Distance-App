@@ -1,21 +1,25 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Video, X, RotateCcw, Square } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { X, RotateCcw } from 'lucide-react';
 
 interface CameraInterfaceProps {
   onCapture: (file: File) => void;
   onClose: () => void;
 }
 
+const MAX_RECORDING_TIME = 60; // 1 minute in seconds
+
 export default function CameraInterface({ onCapture, onClose }: CameraInterfaceProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
-  const [mediaType, setMediaType] = useState<'photo' | 'video'>('photo');
   const [recordingTime, setRecordingTime] = useState(0);
+  const [isPressed, setIsPressed] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressThreshold = 200; // milliseconds to distinguish tap from hold
 
   useEffect(() => {
     startCamera();
@@ -32,7 +36,7 @@ export default function CameraInterface({ onCapture, onClose }: CameraInterfaceP
           width: { ideal: 1280 },
           height: { ideal: 720 }
         },
-        audio: mediaType === 'video'
+        audio: true // Always enable audio for video recording capability
       };
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -103,9 +107,15 @@ export default function CameraInterface({ onCapture, onClose }: CameraInterfaceP
     setIsRecording(true);
     setRecordingTime(0);
     
-    // Update recording time every second
+    // Update recording time every second and stop at max time
     recordingIntervalRef.current = setInterval(() => {
-      setRecordingTime(prev => prev + 1);
+      setRecordingTime(prev => {
+        const newTime = prev + 1;
+        if (newTime >= MAX_RECORDING_TIME) {
+          stopRecording();
+        }
+        return newTime;
+      });
     }, 1000);
   };
 
@@ -121,6 +131,50 @@ export default function CameraInterface({ onCapture, onClose }: CameraInterfaceP
     }
   };
 
+  // Snapchat-style button handlers
+  const handleButtonDown = () => {
+    setIsPressed(true);
+    
+    // Start a timer to detect long press
+    pressTimerRef.current = setTimeout(() => {
+      // Long press detected - start video recording
+      startRecording();
+    }, longPressThreshold);
+  };
+
+  const handleButtonUp = () => {
+    setIsPressed(false);
+    
+    // Clear the long press timer
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+    
+    // If recording, stop it
+    if (isRecording) {
+      stopRecording();
+    } else {
+      // Quick tap - take photo
+      capturePhoto();
+    }
+  };
+
+  const handleButtonCancel = () => {
+    setIsPressed(false);
+    
+    // Clear the long press timer
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+    
+    // If recording, stop it
+    if (isRecording) {
+      stopRecording();
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -128,80 +182,77 @@ export default function CameraInterface({ onCapture, onClose }: CameraInterfaceP
   };
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+    <div className="fixed inset-0 bg-black z-50 flex flex-col safe-area-inset">
       {/* Header */}
-      <div className="flex justify-between items-center p-4 bg-black/50 text-white">
+      <div className="flex justify-between items-center p-3 bg-black/50 text-white shrink-0">
         <button
           onClick={onClose}
           className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+          aria-label="Close camera"
         >
-          <X className="w-6 h-6" />
+          <X className="w-5 h-5" />
         </button>
-        
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setMediaType('photo')}
-            className={`px-4 py-2 rounded-full transition-colors ${
-              mediaType === 'photo' ? 'bg-white text-black' : 'bg-black/50 text-white'
-            }`}
-          >
-            <Camera className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => setMediaType('video')}
-            className={`px-4 py-2 rounded-full transition-colors ${
-              mediaType === 'video' ? 'bg-white text-black' : 'bg-black/50 text-white'
-            }`}
-          >
-            <Video className="w-5 h-5" />
-          </button>
-        </div>
         
         <button
           onClick={switchCamera}
           className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+          aria-label="Switch camera"
         >
-          <RotateCcw className="w-6 h-6" />
+          <RotateCcw className="w-5 h-5" />
         </button>
       </div>
 
       {/* Camera View */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative overflow-hidden">
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
-          className="w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover"
         />
         
-        {/* Recording Timer */}
+        {/* Recording Timer and Indicator */}
         {isRecording && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-mono">
-            {formatTime(recordingTime)}
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center space-x-2 bg-red-500 text-white px-4 py-2 rounded-full text-sm font-mono shadow-lg">
+            <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
+            <span>{formatTime(recordingTime)} / {formatTime(MAX_RECORDING_TIME)}</span>
+          </div>
+        )}
+
+        {/* Instructions */}
+        {!isRecording && !isPressed && (
+          <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full text-xs text-center whitespace-nowrap">
+            Tap for photo • Hold for video
           </div>
         )}
       </div>
 
       {/* Controls */}
-      <div className="p-6 bg-black/50">
-        <div className="flex justify-center items-center space-x-8">
-          {/* Capture Button */}
+      <div className="p-4 pb-6 bg-gradient-to-t from-black/80 to-transparent shrink-0">
+        <div className="flex justify-center items-center">
+          {/* Capture Button with Snapchat-style interaction */}
           <button
-            onClick={mediaType === 'photo' ? capturePhoto : (isRecording ? stopRecording : startRecording)}
-            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 ${
+            onMouseDown={handleButtonDown}
+            onMouseUp={handleButtonUp}
+            onMouseLeave={handleButtonCancel}
+            onTouchStart={handleButtonDown}
+            onTouchEnd={handleButtonUp}
+            onTouchCancel={handleButtonCancel}
+            className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-150 ${
               isRecording 
-                ? 'bg-red-500 hover:bg-red-600' 
-                : 'bg-white hover:bg-gray-200'
+                ? 'bg-red-500 scale-110' 
+                : isPressed
+                  ? 'bg-white scale-95'
+                  : 'bg-white'
             }`}
+            aria-label={isRecording ? 'Stop recording' : 'Take photo or hold to record video'}
           >
-            {isRecording ? (
-              <Square className="w-8 h-8 text-white" />
-            ) : (
-              <div className={`w-12 h-12 rounded-full border-4 ${
-                mediaType === 'photo' ? 'border-gray-800' : 'border-gray-800'
-              }`} />
-            )}
+            <div className={`rounded-full border-4 transition-all duration-150 ${
+              isRecording 
+                ? 'w-8 h-8 bg-white border-white' 
+                : 'w-16 h-16 border-gray-800'
+            }`} />
           </button>
         </div>
       </div>
