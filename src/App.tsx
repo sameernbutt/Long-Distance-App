@@ -21,7 +21,7 @@ import Countdown from './components/Countdown';
 import DailyQuestions from './components/DailyQuestions';
 import Games from './components/Games';
 import MusicSharing from './components/MusicSharing';
-import PhotoGallery from './components/PhotoGallery';
+import MediaGallery from './components/MediaGallery';
 import Profile from './components/Profile';
 import VirtualDates from './components/VirtualDates';
 import Help from './components/Help';
@@ -29,8 +29,6 @@ import Feedback from './components/Feedback';
 import Login from './components/Login';
 import PartnerPairing from './components/PartnerPairing';
 import MoodSharing from './components/MoodSharing';
-import VideoSharing from './components/VideoSharing';
-
 
 import FeedShareMenu from './components/FeedShareMenu';
 import FeedList from './components/FeedList';
@@ -415,8 +413,7 @@ function AppContent() {
 
 
 function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
-  const [showPhoto, setShowPhoto] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
+  const [showPhotoVideo, setShowPhotoVideo] = useState(false);
   const [showMusic, setShowMusic] = useState(false);
   const { user } = useAuth();
   const [partnerId, setPartnerId] = useState<string>('');
@@ -440,8 +437,7 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
         </p>
       </div>
       <FeedShareMenu
-        onSharePhoto={() => setShowPhoto(true)}
-        onShareVideo={() => setShowVideo(true)}
+        onSharePhotoVideo={() => setShowPhotoVideo(true)}
         onShareMusic={() => setShowMusic(true)}
         isDarkMode={isDarkMode}
       />
@@ -450,31 +446,17 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
       </div>
 
       {/* Modals for sharing */}
-      {showPhoto && (
+      {showPhotoVideo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className={`rounded-xl shadow-xl p-4 w-full max-w-md relative border-2 ${
             isDarkMode ? 'bg-black border-pink-900' : 'bg-white border-gray-200'
           }`}>
-            <button className={`absolute top-2 right-2 transition-colors ${
+            <button className={`absolute top-2 right-2 z-10 transition-colors ${
               isDarkMode ? 'text-gray-400 hover:text-pink-400' : 'text-gray-400 hover:text-pink-500'
-            }`} onClick={() => setShowPhoto(false)}>
+            }`} onClick={() => setShowPhotoVideo(false)}>
               <X className="w-5 h-5" />
             </button>
-            <PhotoGallery />
-          </div>
-        </div>
-      )}
-      {showVideo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className={`rounded-xl shadow-xl p-4 w-full max-w-md relative border-2 ${
-            isDarkMode ? 'bg-black border-purple-900' : 'bg-white border-gray-200'
-          }`}>
-            <button className={`absolute top-2 right-2 transition-colors ${
-              isDarkMode ? 'text-gray-400 hover:text-purple-400' : 'text-gray-400 hover:text-purple-500'
-            }`} onClick={() => setShowVideo(false)}>
-              <X className="w-5 h-5" />
-            </button>
-            <VideoSharing />
+            <MediaGallery />
           </div>
         </div>
       )}
