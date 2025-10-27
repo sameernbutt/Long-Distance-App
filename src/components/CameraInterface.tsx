@@ -184,21 +184,21 @@ export default function CameraInterface({ onCapture, onClose }: CameraInterfaceP
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col safe-area-inset">
       {/* Header */}
-      <div className="flex justify-between items-center p-3 bg-black/50 text-white shrink-0">
+      <div className="flex justify-between items-center p-3 bg-gradient-to-b from-black/80 to-transparent text-white shrink-0">
         <button
           onClick={onClose}
-          className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+          className="p-2 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 active:bg-white/30 transition-all duration-150 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50"
           aria-label="Close camera"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5 drop-shadow-lg" />
         </button>
         
         <button
           onClick={switchCamera}
-          className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+          className="p-2 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 active:bg-white/30 transition-all duration-150 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50"
           aria-label="Switch camera"
         >
-          <RotateCcw className="w-5 h-5" />
+          <RotateCcw className="w-5 h-5 drop-shadow-lg" />
         </button>
       </div>
 
@@ -214,22 +214,22 @@ export default function CameraInterface({ onCapture, onClose }: CameraInterfaceP
         
         {/* Recording Timer and Indicator */}
         {isRecording && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center space-x-2 bg-red-500 text-white px-4 py-2 rounded-full text-sm font-mono shadow-lg">
-            <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
-            <span>{formatTime(recordingTime)} / {formatTime(MAX_RECORDING_TIME)}</span>
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center space-x-2 bg-red-500 text-white px-4 py-2 rounded-full text-sm font-mono shadow-xl">
+            <div className="w-3 h-3 bg-white rounded-full animate-pulse shadow-sm" />
+            <span className="font-semibold">{formatTime(recordingTime)} / {formatTime(MAX_RECORDING_TIME)}</span>
           </div>
         )}
 
         {/* Instructions */}
         {!isRecording && !isPressed && (
-          <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full text-xs text-center whitespace-nowrap">
+          <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 bg-black/70 backdrop-blur-sm text-white px-5 py-2 rounded-full text-xs text-center whitespace-nowrap shadow-lg border border-white/10">
             Tap for photo • Hold for video
           </div>
         )}
       </div>
 
       {/* Controls */}
-      <div className="p-4 pb-6 bg-gradient-to-t from-black/80 to-transparent shrink-0">
+      <div className="p-4 pb-8 bg-gradient-to-t from-black/90 via-black/60 to-transparent shrink-0">
         <div className="flex justify-center items-center">
           {/* Capture Button with Snapchat-style interaction */}
           <button
@@ -239,13 +239,14 @@ export default function CameraInterface({ onCapture, onClose }: CameraInterfaceP
             onTouchStart={handleButtonDown}
             onTouchEnd={handleButtonUp}
             onTouchCancel={handleButtonCancel}
-            className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-150 ${
+            className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-150 focus:outline-none shadow-2xl ${
               isRecording 
-                ? 'bg-red-500 scale-110' 
+                ? 'bg-red-500 scale-110 shadow-red-500/50' 
                 : isPressed
-                  ? 'bg-white scale-95'
-                  : 'bg-white'
+                  ? 'bg-white scale-95 shadow-white/30'
+                  : 'bg-white shadow-white/20'
             }`}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-label={isRecording ? 'Stop recording' : 'Take photo or hold to record video'}
           >
             <div className={`rounded-full border-4 transition-all duration-150 ${
