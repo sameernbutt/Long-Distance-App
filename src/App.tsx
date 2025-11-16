@@ -503,12 +503,12 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
         : 'bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50'
     }`}>
       {/* Header */}
-      <header className={`backdrop-blur-md border-b sticky top-0 z-40 safe-area-top transition-colors duration-300 ${
+      <header className={`backdrop-blur-md border-b sticky top-0 z-40 transition-colors duration-300 ${
         isDarkMode 
           ? 'bg-black/80 border-purple-900' 
           : 'bg-white/80 border-pink-200'
       }`}>
-        <div className="px-4 py-3">
+        <div className="px-4 py-2">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
