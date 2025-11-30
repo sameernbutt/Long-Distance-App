@@ -150,9 +150,9 @@ export default function DailyQuestions({ isDarkMode = false }: DailyQuestionsPro
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 placeholder="Share your thoughts..."
-                className={`w-full p-3 md:p-4 border rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-sm md:text-base transition-colors ${
+                className={`w-full p-3 md:p-4 border-2 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-sm md:text-base transition-colors ${
                   isDarkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                    ? 'bg-black border-purple-900 text-white placeholder-gray-500' 
                     : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
                 }`}
                 rows={4}
@@ -197,9 +197,9 @@ export default function DailyQuestions({ isDarkMode = false }: DailyQuestionsPro
             }`}>Today's Answers</h4>
             <div className="space-y-4">
               {Object.entries(coupleAnswers).map(([uid, val]) => (
-                <div key={uid} className={`rounded-xl p-4 border transition-colors ${
+                <div key={uid} className={`rounded-xl p-4 border-2 transition-colors ${
                   isDarkMode 
-                    ? 'bg-gray-700 border-gray-600' 
+                    ? 'bg-gray-800/50 border-purple-900' 
                     : 'bg-gray-50 border-gray-200'
                 }`}>
                   <p className={`font-medium mb-2 text-sm transition-colors ${

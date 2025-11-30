@@ -376,17 +376,17 @@ export default function DateNightCountdown({ isDarkMode = false }: DateNightCoun
                     type="text"
                     value={editData.activity}
                     onChange={(e) => setEditData({ ...editData, activity: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
+                    className={`w-full p-3 border-2 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
                       isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                        : 'border-gray-300'
+                        ? 'bg-black border-purple-900 text-white placeholder-gray-500' 
+                        : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
                     }`}
                     placeholder="What are you planning to do?"
                   />
                   {bucketList.length > 0 && (
                     <button
                       onClick={() => setShowBucketList(!showBucketList)}
-                      className={`absolute right-2 top-2 p-1 transition-colors ${
+                      className={`absolute right-3 top-3 p-1 transition-colors ${
                         isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                       }`}
                     >
@@ -396,12 +396,12 @@ export default function DateNightCountdown({ isDarkMode = false }: DateNightCoun
                 </div>
                 
                 {showBucketList && bucketList.length > 0 && (
-                  <div className={`mt-2 border rounded-lg max-h-40 overflow-y-auto transition-colors ${
-                    isDarkMode ? 'border-gray-600' : 'border-gray-200'
+                  <div className={`mt-2 border-2 rounded-xl max-h-40 overflow-y-auto transition-colors ${
+                    isDarkMode ? 'border-purple-900 bg-black' : 'border-gray-200 bg-white'
                   }`}>
                     <div className={`p-2 text-xs font-medium border-b transition-colors ${
                       isDarkMode 
-                        ? 'text-gray-400 border-gray-600' 
+                        ? 'text-gray-400 border-purple-900' 
                         : 'text-gray-500 border-gray-200'
                     }`}>
                       Select from Bucket List:
@@ -412,7 +412,7 @@ export default function DateNightCountdown({ isDarkMode = false }: DateNightCoun
                         onClick={() => handleBucketListSelect(item)}
                         className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                           isDarkMode 
-                            ? 'hover:bg-gray-700 text-white' 
+                            ? 'hover:bg-gray-800 text-white' 
                             : 'hover:bg-gray-50'
                         }`}
                       >
@@ -433,39 +433,36 @@ export default function DateNightCountdown({ isDarkMode = false }: DateNightCoun
                   type="datetime-local"
                   value={editData.datetime}
                   onChange={(e) => setEditData({ ...editData, datetime: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
+                  className={`w-full p-3 border-2 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
                     isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'border-gray-300'
+                      ? 'bg-black border-purple-900 text-white' 
+                      : 'bg-white border-gray-200 text-gray-900'
                   }`}
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 mt-6">
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={handleSave}
+                disabled={!editData.activity.trim() || !editData.datetime}
+                className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+              >
+                {isEditing ? 'Save Changes' : 'Set Date Night'}
+              </button>
               <button
                 onClick={() => {
                   setIsEditing(false);
                   setShowSetDateNight(false);
                   setShowBucketList(false);
                 }}
-                className={`px-4 py-2 border rounded-lg transition-colors ${
+                className={`px-6 py-3 rounded-xl border-2 transition-colors ${
                   isDarkMode 
-                    ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    ? 'bg-black border-purple-900 text-gray-300 hover:border-purple-800' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200'
                 }`}
               >
                 Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  isDarkMode 
-                    ? 'bg-pink-600 text-white hover:bg-pink-500' 
-                    : 'bg-pink-500 text-white hover:bg-pink-600'
-                }`}
-              >
-                Save
               </button>
             </div>
           </div>

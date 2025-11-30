@@ -5,7 +5,13 @@ import { addFeedItem, uploadFile } from '../firebase/feed';
 import { getPartnerId } from '../firebase/moods';
 import CameraInterface from './CameraInterface';
 
-export default function MediaGallery() {
+interface MediaGalleryProps {
+  onClose?: () => void;
+  isDarkMode?: boolean;
+}
+
+// Note: isDarkMode is accepted for consistency but MediaGallery uses a dark overlay by default
+export default function MediaGallery({ onClose, isDarkMode: _isDarkMode = false }: MediaGalleryProps) {
   const { user, userProfile } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [caption, setCaption] = useState('');
@@ -110,10 +116,14 @@ export default function MediaGallery() {
         console.error('Failed to share media:', result.error);
         alert(`Failed to share ${capturedMedia.type}. Please try again.`);
       } else {
-        // Success - reset state
+        // Success - reset state and close
         setCapturedMedia(null);
         setShowPreview(false);
         setCaption('');
+        // Close the media gallery and return to feed
+        if (onClose) {
+          onClose();
+        }
       }
     } catch (error) {
       console.error('Error sharing media:', error);

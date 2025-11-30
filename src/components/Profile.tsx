@@ -30,6 +30,7 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingAnniversary, setIsEditingAnniversary] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Form data
   const [profileData, setProfileData] = useState({
@@ -41,8 +42,12 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
   // Load partner and anniversary data
   useEffect(() => {
     const loadData = async () => {
-      if (!user?.uid || isGuest) return;
+      if (!user?.uid || isGuest) {
+        setIsLoading(false);
+        return;
+      }
       
+      setIsLoading(true);
       try {
         // Load partner ID
         const pId = await getPartnerId(user.uid);
@@ -65,6 +70,8 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
         }
       } catch (error) {
         console.error('Error loading profile data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -165,6 +172,17 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
           >
             Sign In
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-4 md:p-6 max-w-2xl mx-auto">
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-pink-500 mb-4"></div>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading profile...</p>
         </div>
       </div>
     );
@@ -287,6 +305,47 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
           </div>
         )}
       </div>
+
+      {/* Partner Information */}
+      {partnerId && partnerProfile && (
+        <div className={`rounded-xl p-6 shadow-lg border-2 mb-6 transition-colors ${
+          isDarkMode 
+            ? 'bg-black border-pink-900' 
+            : 'bg-white border-gray-100'
+        }`}>
+          <h3 className={`text-lg font-semibold mb-4 transition-colors ${
+            isDarkMode ? 'text-white' : 'text-gray-800'
+          }`}>Your Partner</h3>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <Heart className="w-5 h-5 text-pink-500" />
+              <div>
+                <p className={`text-sm transition-colors ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>Name</p>
+                <p className={`font-medium transition-colors ${
+                  isDarkMode ? 'text-white' : 'text-gray-800'
+                }`}>{partnerProfile.displayName || 'Not set'}</p>
+              </div>
+            </div>
+            {partnerProfile.location && (
+              <div className="flex items-center space-x-3">
+                <MapPin className={`w-5 h-5 transition-colors ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+                <div>
+                  <p className={`text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>Location</p>
+                  <p className={`font-medium transition-colors ${
+                    isDarkMode ? 'text-white' : 'text-gray-800'
+                  }`}>{partnerProfile.location}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Anniversary Section */}
       {partnerId && (

@@ -15,7 +15,7 @@ firebase.initializeApp({
 // Get Firebase Messaging instance
 const messaging = firebase.messaging();
 
-// Handle background messages from FCM
+// Handle background messages
 messaging.onBackgroundMessage((payload) => {
   console.log('Received background message ', payload);
   
@@ -35,43 +35,6 @@ messaging.onBackgroundMessage((payload) => {
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
-});
-
-// Handle Web Push messages (for iOS Safari)
-self.addEventListener('push', (event) => {
-  console.log('Push event received:', event);
-  
-  let notificationData = {};
-  
-  if (event.data) {
-    try {
-      notificationData = event.data.json();
-    } catch (e) {
-      notificationData = { title: 'New Message', body: 'You have a new notification' };
-    }
-  } else {
-    notificationData = { title: 'Thinking of You! ❤️', body: 'Someone is thinking of you!' };
-  }
-  
-  const notificationTitle = notificationData.title || 'Thinking of You! ❤️';
-  const notificationOptions = {
-    body: notificationData.body || 'Someone is thinking of you!',
-    icon: '/vite.svg',
-    badge: '/vite.svg',
-    tag: 'thinking-of-you',
-    requireInteraction: true,
-    data: notificationData.data || {},
-    actions: [
-      {
-        action: 'open',
-        title: 'Open App'
-      }
-    ]
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(notificationTitle, notificationOptions)
-  );
 });
 
 // Handle notification click
