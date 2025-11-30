@@ -52,6 +52,73 @@ const tabs = [
   { id: 'dates' as TabType, label: 'Dates', icon: Heart, color: 'text-red-500' },
 ];
 
+// FeedPage component for the feed tab
+function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
+  const [showPhotoVideo, setShowPhotoVideo] = useState(false);
+  const [showMusic, setShowMusic] = useState(false);
+  const { user } = useAuth();
+  const [partnerId, setPartnerId] = useState<string>('');
+
+  useEffect(() => {
+    if (user) {
+      getPartnerId(user.uid).then((id) => setPartnerId(id || ''));
+    }
+  }, [user]);
+
+  return (
+    <div className="relative flex flex-col items-center min-h-[60vh] px-4 py-10">
+      <div className="mb-8 text-center">
+        <h2 className={`text-2xl font-bold mb-2 transition-colors ${
+          isDarkMode ? 'text-white' : 'text-gray-800'
+        }`}>Your Shared Feed</h2>
+        <p className={`max-w-md mx-auto transition-colors ${
+          isDarkMode ? 'text-gray-400' : 'text-gray-600'
+        }`}>
+          Photos, videos, and music links that you and your partner share will appear here. Start sharing your moments!
+        </p>
+      </div>
+      <FeedShareMenu
+        onSharePhotoVideo={() => setShowPhotoVideo(true)}
+        onShareMusic={() => setShowMusic(true)}
+        isDarkMode={isDarkMode}
+      />
+      <div className="mt-8 w-full">
+        {partnerId && <FeedList partnerId={partnerId} isDarkMode={isDarkMode} />}
+      </div>
+
+      {/* Modals for sharing */}
+      {showPhotoVideo && (
+        <div className="fixed inset-0 z-50">
+          {/* Close button overlay */}
+          <button 
+            className="fixed top-4 right-4 z-[70] p-3 rounded-full bg-white/15 backdrop-blur-md border border-white/30 text-white hover:bg-white/25 active:bg-white/35 transition-all duration-150 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-xl"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            onClick={() => setShowPhotoVideo(false)}
+            aria-label="Close"
+          >
+            <X className="w-6 h-6 drop-shadow-lg" />
+          </button>
+          <MediaGallery onClose={() => setShowPhotoVideo(false)} isDarkMode={isDarkMode} />
+        </div>
+      )}
+      {showMusic && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className={`rounded-xl shadow-xl p-4 w-full max-w-md relative border-2 ${
+            isDarkMode ? 'bg-black border-blue-900' : 'bg-white border-gray-200'
+          }`}>
+            <button className={`absolute top-2 right-2 transition-colors ${
+              isDarkMode ? 'text-gray-400 hover:text-blue-400' : 'text-gray-400 hover:text-blue-500'
+            }`} onClick={() => setShowMusic(false)}>
+              <X className="w-5 h-5" />
+            </button>
+            <MusicSharing />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AppContent() {
   const { user, userProfile, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('home');
@@ -285,7 +352,7 @@ function AppContent() {
   // Show loading screen while checking authentication (only briefly)
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center safe-area-top safe-area-bottom">
         <div className="text-center">
           <div className="p-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full w-fit mx-auto mb-4 animate-pulse">
             <Heart className="w-8 h-8 text-white fill-current" />
@@ -297,16 +364,16 @@ function AppContent() {
 
   // Show login modal if requested (but don't block app access)
   if (showLogin) {
-    return <Login onBack={() => setShowLogin(false)} onSuccess={() => setShowLogin(false)} />;
+    return <Login onBack={() => setShowLogin(false)} onSuccess={() => setShowLogin(false)} isDarkMode={isDarkMode} />;
   }
 
   // Show specific screens
   if (showHelp) {
-    return <Help onBack={() => setShowHelp(false)} />;
+    return <Help onBack={() => setShowHelp(false)} isDarkMode={isDarkMode} />;
   }
 
   if (showFeedback) {
-    return <Feedback onBack={() => setShowFeedback(false)} />;
+    return <Feedback onBack={() => setShowFeedback(false)} isDarkMode={isDarkMode} />;
   }
 
   if (showPartnerPairing) {
@@ -405,78 +472,7 @@ function AppContent() {
         return <Profile onPairPartner={() => setShowPartnerPairing(true)} isDarkMode={isDarkMode} />;
 
       case 'feed':
-        return (
-          <FeedPage isDarkMode={isDarkMode} />
-        );
-
-// FeedPage component for the feed tab
-
-
-function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
-  const [showPhotoVideo, setShowPhotoVideo] = useState(false);
-  const [showMusic, setShowMusic] = useState(false);
-  const { user } = useAuth();
-  const [partnerId, setPartnerId] = useState<string>('');
-
-  useEffect(() => {
-    if (user) {
-      getPartnerId(user.uid).then((id) => setPartnerId(id || ''));
-    }
-  }, [user]);
-
-  return (
-    <div className="relative flex flex-col items-center min-h-[60vh] px-4 py-10">
-      <div className="mb-8 text-center">
-        <h2 className={`text-2xl font-bold mb-2 transition-colors ${
-          isDarkMode ? 'text-white' : 'text-gray-800'
-        }`}>Your Shared Feed</h2>
-        <p className={`max-w-md mx-auto transition-colors ${
-          isDarkMode ? 'text-gray-400' : 'text-gray-600'
-        }`}>
-          Photos, videos, and music links that you and your partner share will appear here. Start sharing your moments!
-        </p>
-      </div>
-      <FeedShareMenu
-        onSharePhotoVideo={() => setShowPhotoVideo(true)}
-        onShareMusic={() => setShowMusic(true)}
-        isDarkMode={isDarkMode}
-      />
-      <div className="mt-8 w-full">
-        {partnerId && <FeedList partnerId={partnerId} isDarkMode={isDarkMode} />}
-      </div>
-
-      {/* Modals for sharing */}
-      {showPhotoVideo && (
-        <div className="fixed inset-0 z-50">
-          {/* Close button overlay */}
-          <button 
-            className="fixed top-4 right-4 z-[70] p-3 rounded-full bg-white/15 backdrop-blur-md border border-white/30 text-white hover:bg-white/25 active:bg-white/35 transition-all duration-150 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-xl"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            onClick={() => setShowPhotoVideo(false)}
-            aria-label="Close"
-          >
-            <X className="w-6 h-6 drop-shadow-lg" />
-          </button>
-          <MediaGallery onClose={() => setShowPhotoVideo(false)} />
-        </div>
-      )}
-      {showMusic && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className={`rounded-xl shadow-xl p-4 w-full max-w-md relative border-2 ${
-            isDarkMode ? 'bg-black border-blue-900' : 'bg-white border-gray-200'
-          }`}>
-            <button className={`absolute top-2 right-2 transition-colors ${
-              isDarkMode ? 'text-gray-400 hover:text-blue-400' : 'text-gray-400 hover:text-blue-500'
-            }`} onClick={() => setShowMusic(false)}>
-              <X className="w-5 h-5" />
-            </button>
-            <MusicSharing />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+        return <FeedPage isDarkMode={isDarkMode} />;
       case 'dates':
         return <VirtualDates isDarkMode={isDarkMode} />;
       default:
@@ -720,98 +716,6 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
         </div>
       </nav>
 
-      {/* Desktop Sidebar - Hidden on Mobile */}
-      <aside className="hidden md:block fixed left-0 top-0 h-full w-64 bg-white/90 backdrop-blur-md border-r border-pink-200 z-30 safe-area-top">
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl">
-                <Heart className="w-5 h-5 text-white fill-current" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-800">{getAppTitle()}</h2>
-                <p className="text-sm text-gray-600">Long Distance Love</p>
-                {user && userProfile && (
-                  <p className="text-xs text-pink-600 font-medium">
-                    Hi {userProfile.displayName}!
-                  </p>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 text-gray-400 hover:text-gray-600"
-            >
-              <Menu className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-        
-        <nav className="p-4">
-          <div className="space-y-1">
-            {/* {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${activeTab === tab.id ? tab.color : 'text-gray-500'}`} />
-                  <span className="text-sm font-medium">{tab.label}</span>
-                </button>
-              );
-            })} */}
-          </div>
-          
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <div className="space-y-1">
-              <button 
-                onClick={() => setShowHelp(true)}
-                className="w-full flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <HelpCircle className="w-4 h-4 text-gray-500" />
-                <span className="text-sm font-medium">Help</span>
-              </button>
-              <button 
-                onClick={() => setShowFeedback(true)}
-                className="w-full flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <MessageSquare className="w-4 h-4 text-gray-500" />
-                <span className="text-sm font-medium">Feedback</span>
-              </button>
-              {user ? (
-                <button 
-                  onClick={handleLogout}
-                  className="w-full flex items-center space-x-3 px-3 py-2.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                >
-                  <LogOut className="w-4 h-4 text-red-500" />
-                  <span className="text-sm font-medium">Logout</span>
-                </button>
-              ) : (
-                <button 
-                  onClick={() => setShowLogin(true)}
-                  className="w-full flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <LogIn className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium">Login</span>
-                </button>
-              )}
-            </div>
-          </div>
-        </nav>
-      </aside>
-
-      {/* Desktop Main Content Offset */}
-      <div className="hidden md:block md:ml-64">
-        <main className="min-h-screen">
-          {renderContent()}
-        </main>
-      </div>
     </div>
   );
 }

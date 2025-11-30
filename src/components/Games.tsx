@@ -110,7 +110,7 @@ export default function Games({ isDarkMode = false }: GamesProps) {
           <div className="grid gap-6 mb-8">
             <div 
               onClick={generateWouldYouRather}
-              className={`rounded-xl p-4 md:p-6 border cursor-pointer hover:shadow-lg active:scale-95 transition-all duration-200 ${
+              className={`rounded-xl p-4 md:p-6 border-2 cursor-pointer hover:shadow-lg active:scale-95 transition-all duration-200 ${
                 isDarkMode 
                   ? 'bg-black border-blue-400 text-blue-100' 
                   : 'bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200'
@@ -131,7 +131,7 @@ export default function Games({ isDarkMode = false }: GamesProps) {
               </div>
             </div>
 
-            <div className={`rounded-xl p-4 md:p-6 border transition-colors ${
+            <div className={`rounded-xl p-4 md:p-6 border-2 transition-colors ${
               isDarkMode 
                 ? 'bg-black border-pink-400 text-white' 
                 : 'bg-gradient-to-br from-pink-50 to-rose-100 border-pink-200'
@@ -153,7 +153,7 @@ export default function Games({ isDarkMode = false }: GamesProps) {
               <div className="flex gap-3">
                 <button
                   onClick={() => generateTruthOrDare('truth')}
-                  className={`flex-1 py-3 rounded-lg active:scale-95 transition-all font-medium ${
+                  className={`flex-1 py-3 rounded-xl active:scale-95 transition-all font-medium ${
                     isDarkMode 
                       ? 'bg-purple-500 text-white hover:bg-purple-600' 
                       : 'bg-purple-500 text-white hover:bg-purple-600'
@@ -163,7 +163,7 @@ export default function Games({ isDarkMode = false }: GamesProps) {
                 </button>
                 <button
                   onClick={() => generateTruthOrDare('dare')}
-                  className={`flex-1 py-3 rounded-lg active:scale-95 transition-all font-medium ${
+                  className={`flex-1 py-3 rounded-xl active:scale-95 transition-all font-medium ${
                     isDarkMode 
                       ? 'bg-pink-500 text-white hover:bg-pink-600' 
                       : 'bg-pink-500 text-white hover:bg-pink-600'
@@ -198,9 +198,9 @@ export default function Games({ isDarkMode = false }: GamesProps) {
               </h3>
             </div>
 
-            <div className={`rounded-xl p-4 md:p-6 mb-6 border transition-colors ${
+            <div className={`rounded-xl p-4 md:p-6 mb-6 border-2 transition-colors ${
               isDarkMode 
-                ? 'bg-gradient-to-r from-gray-700 to-gray-600 border-gray-500' 
+                ? 'bg-gradient-to-r from-gray-800 to-gray-700 border-purple-900' 
                 : 'bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200'
             }`}>
               <p className={`text-base md:text-lg text-center leading-relaxed transition-colors ${
@@ -252,9 +252,9 @@ export default function Games({ isDarkMode = false }: GamesProps) {
 
         {/* Game History */}
         {gameHistory.length > 0 && (
-          <div className={`rounded-xl p-6 border transition-colors ${
+          <div className={`rounded-xl p-6 border-2 transition-colors ${
             isDarkMode 
-              ? 'bg-gray-700 border-gray-600' 
+              ? 'bg-gray-800/50 border-purple-900' 
               : 'bg-gray-50 border-gray-200'
           }`}>
             <h4 className={`font-semibold mb-4 transition-colors ${
@@ -262,9 +262,9 @@ export default function Games({ isDarkMode = false }: GamesProps) {
             }`}>Recent Prompts</h4>
             <div className="space-y-3">
               {gameHistory.map((prompt, index) => (
-                <div key={index} className={`rounded-lg p-3 text-sm transition-colors ${
+                <div key={index} className={`rounded-xl p-3 text-sm transition-colors ${
                   isDarkMode 
-                    ? 'bg-gray-600 text-gray-300' 
+                    ? 'bg-gray-800 text-gray-300' 
                     : 'bg-white text-gray-600'
                 }`}>
                   {prompt}

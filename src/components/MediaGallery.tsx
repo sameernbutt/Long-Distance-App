@@ -7,9 +7,11 @@ import CameraInterface from './CameraInterface';
 
 interface MediaGalleryProps {
   onClose?: () => void;
+  isDarkMode?: boolean;
 }
 
-export default function MediaGallery({ onClose }: MediaGalleryProps) {
+// Note: isDarkMode is accepted for consistency but MediaGallery uses a dark overlay by default
+export default function MediaGallery({ onClose, isDarkMode: _isDarkMode = false }: MediaGalleryProps) {
   const { user, userProfile } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [caption, setCaption] = useState('');

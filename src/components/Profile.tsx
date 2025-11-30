@@ -306,6 +306,47 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
         )}
       </div>
 
+      {/* Partner Information */}
+      {partnerId && partnerProfile && (
+        <div className={`rounded-xl p-6 shadow-lg border-2 mb-6 transition-colors ${
+          isDarkMode 
+            ? 'bg-black border-pink-900' 
+            : 'bg-white border-gray-100'
+        }`}>
+          <h3 className={`text-lg font-semibold mb-4 transition-colors ${
+            isDarkMode ? 'text-white' : 'text-gray-800'
+          }`}>Your Partner</h3>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <Heart className="w-5 h-5 text-pink-500" />
+              <div>
+                <p className={`text-sm transition-colors ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>Name</p>
+                <p className={`font-medium transition-colors ${
+                  isDarkMode ? 'text-white' : 'text-gray-800'
+                }`}>{partnerProfile.displayName || 'Not set'}</p>
+              </div>
+            </div>
+            {partnerProfile.location && (
+              <div className="flex items-center space-x-3">
+                <MapPin className={`w-5 h-5 transition-colors ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+                <div>
+                  <p className={`text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>Location</p>
+                  <p className={`font-medium transition-colors ${
+                    isDarkMode ? 'text-white' : 'text-gray-800'
+                  }`}>{partnerProfile.location}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Anniversary Section */}
       {partnerId && (
         <div className={`rounded-xl p-6 shadow-lg border-2 mb-6 transition-colors ${

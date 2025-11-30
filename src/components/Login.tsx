@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, Eye, EyeOff, LogIn, User } from 'lucide-react';
 import { signInWithEmail, signUpWithEmail, signInWithGoogle } from '../firebase/auth';
 
 interface LoginProps {
   onBack: () => void;
   onSuccess: () => void;
+  isDarkMode?: boolean;
 }
 
-export default function Login({ onBack, onSuccess }: LoginProps) {
+export default function Login({ onBack, onSuccess, isDarkMode = false }: LoginProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -65,14 +66,26 @@ export default function Login({ onBack, onSuccess }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+    <div className={`min-h-screen transition-colors ${
+      isDarkMode 
+        ? 'bg-gray-900' 
+        : 'bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50'
+    }`}>
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-md border-b border-pink-200 sticky top-0 z-40 safe-area-top">
+      <div className={`backdrop-blur-md border-b sticky top-0 z-40 safe-area-top transition-colors ${
+        isDarkMode 
+          ? 'bg-black/80 border-purple-900' 
+          : 'bg-white/80 border-pink-200'
+      }`}>
         <div className="px-4 py-3">
           <div className="flex items-center space-x-3">
             <button
               onClick={onBack}
-              className="p-2 text-gray-600 hover:text-pink-600 hover:bg-pink-100 rounded-xl transition-colors"
+              className={`p-2 rounded-xl transition-colors ${
+                isDarkMode 
+                  ? 'text-gray-300 hover:text-pink-400 hover:bg-gray-800' 
+                  : 'text-gray-600 hover:text-pink-600 hover:bg-pink-100'
+              }`}
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -80,10 +93,14 @@ export default function Login({ onBack, onSuccess }: LoginProps) {
               <LogIn className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-800">
+              <h1 className={`text-lg font-bold transition-colors ${
+                isDarkMode ? 'text-white' : 'text-gray-800'
+              }`}>
                 {isLogin ? 'Sign In' : 'Sign Up'}
               </h1>
-              <p className="text-xs text-gray-600">
+              <p className={`text-xs transition-colors ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+              }`}>
                 {isLogin ? 'Welcome back!' : 'Create your account'}
               </p>
             </div>
@@ -95,24 +112,32 @@ export default function Login({ onBack, onSuccess }: LoginProps) {
       <div className="p-4 md:p-6">
         <div className="max-w-md mx-auto">
           {/* Toggle Login/Signup */}
-          <div className="bg-white rounded-xl p-1 shadow-lg border border-gray-100 mb-6">
+          <div className={`rounded-xl p-1 shadow-lg border-2 mb-6 transition-colors ${
+            isDarkMode 
+              ? 'bg-black border-purple-900' 
+              : 'bg-white border-gray-100'
+          }`}>
             <div className="grid grid-cols-2">
               <button
                 onClick={() => setIsLogin(true)}
-                className={`py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                className={`py-2 px-4 rounded-xl text-sm font-medium transition-colors ${
                   isLogin
                     ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white'
-                    : 'text-gray-600 hover:text-gray-800'
+                    : isDarkMode 
+                      ? 'text-gray-400 hover:text-white' 
+                      : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
                 Sign In
               </button>
               <button
                 onClick={() => setIsLogin(false)}
-                className={`py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                className={`py-2 px-4 rounded-xl text-sm font-medium transition-colors ${
                   !isLogin
                     ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white'
-                    : 'text-gray-600 hover:text-gray-800'
+                    : isDarkMode 
+                      ? 'text-gray-400 hover:text-white' 
+                      : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
                 Sign Up
@@ -122,17 +147,27 @@ export default function Login({ onBack, onSuccess }: LoginProps) {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-              <p className="text-sm text-red-700">{error}</p>
+            <div className={`rounded-xl p-3 mb-4 border-2 transition-colors ${
+              isDarkMode 
+                ? 'bg-red-900/30 border-red-800 text-red-300' 
+                : 'bg-red-50 border-red-200 text-red-700'
+            }`}>
+              <p className="text-sm">{error}</p>
             </div>
           )}
 
           {/* Email/Password Form */}
           <form onSubmit={handleEmailAuth} className="space-y-4">
-            <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-100">
+            <div className={`rounded-xl p-4 md:p-6 shadow-lg border-2 transition-colors ${
+              isDarkMode 
+                ? 'bg-black border-purple-900' 
+                : 'bg-white border-gray-100'
+            }`}>
               {!isLogin && (
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className={`block text-sm font-medium mb-2 transition-colors ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
                     Display Name
                   </label>
                   <div className="relative">
@@ -140,17 +175,25 @@ export default function Login({ onBack, onSuccess }: LoginProps) {
                       type="text"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                      className={`w-full p-3 pl-10 border-2 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
+                        isDarkMode 
+                          ? 'bg-black border-purple-900 text-white placeholder-gray-500' 
+                          : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+                      }`}
                       placeholder="Enter your name"
                       required={!isLogin}
                     />
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <User className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 transition-colors ${
+                      isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                    }`} />
                   </div>
                 </div>
               )}
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium mb-2 transition-colors ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Email
                 </label>
                 <div className="relative">
@@ -158,16 +201,24 @@ export default function Login({ onBack, onSuccess }: LoginProps) {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className={`w-full p-3 pl-10 border-2 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
+                      isDarkMode 
+                        ? 'bg-black border-purple-900 text-white placeholder-gray-500' 
+                        : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+                    }`}
                     placeholder="Enter your email"
                     required
                   />
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 transition-colors ${
+                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                  }`} />
                 </div>
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium mb-2 transition-colors ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Password
                 </label>
                 <div className="relative">
@@ -175,15 +226,25 @@ export default function Login({ onBack, onSuccess }: LoginProps) {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-3 pl-10 pr-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className={`w-full p-3 pl-10 pr-10 border-2 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors ${
+                      isDarkMode 
+                        ? 'bg-black border-purple-900 text-white placeholder-gray-500' 
+                        : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+                    }`}
                     placeholder="Enter your password"
                     required
                   />
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 transition-colors ${
+                    isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                  }`} />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors ${
+                      isDarkMode 
+                        ? 'text-gray-500 hover:text-gray-300' 
+                        : 'text-gray-400 hover:text-gray-600'
+                    }`}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -193,7 +254,7 @@ export default function Login({ onBack, onSuccess }: LoginProps) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+                className="w-full py-3 px-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
               >
                 {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
               </button>
@@ -202,16 +263,26 @@ export default function Login({ onBack, onSuccess }: LoginProps) {
 
           {/* Divider */}
           <div className="flex items-center my-6">
-            <div className="flex-1 border-t border-gray-200"></div>
-            <span className="px-4 text-sm text-gray-500">or</span>
-            <div className="flex-1 border-t border-gray-200"></div>
+            <div className={`flex-1 border-t transition-colors ${
+              isDarkMode ? 'border-purple-900' : 'border-gray-200'
+            }`}></div>
+            <span className={`px-4 text-sm transition-colors ${
+              isDarkMode ? 'text-gray-500' : 'text-gray-500'
+            }`}>or</span>
+            <div className={`flex-1 border-t transition-colors ${
+              isDarkMode ? 'border-purple-900' : 'border-gray-200'
+            }`}></div>
           </div>
 
           {/* Google Sign In */}
           <button
             onClick={handleGoogleAuth}
             disabled={loading}
-            className="w-full py-3 px-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center space-x-2"
+            className={`w-full py-3 px-4 border-2 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center space-x-2 ${
+              isDarkMode 
+                ? 'bg-black border-purple-900 text-white hover:bg-gray-900' 
+                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+            }`}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -235,7 +306,9 @@ export default function Login({ onBack, onSuccess }: LoginProps) {
           </button>
 
           {/* Terms */}
-          <p className="text-xs text-gray-500 text-center mt-6">
+          <p className={`text-xs text-center mt-6 transition-colors ${
+            isDarkMode ? 'text-gray-500' : 'text-gray-500'
+          }`}>
             By signing up, you agree to our Terms of Service and Privacy Policy
           </p>
         </div>

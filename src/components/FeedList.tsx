@@ -78,7 +78,7 @@ const FeedList: React.FC<FeedListProps> = ({ partnerId, isDarkMode = false }) =>
       {feed.map((item) => (
         <div key={item.id} className={`rounded-2xl shadow-lg p-5 transition-all duration-200 ${
           isDarkMode 
-            ? 'bg-gray-900 border border-pink-900/30 shadow-pink-900/10' 
+            ? 'bg-black border border-pink-900/60' 
             : 'bg-white border border-gray-100 shadow-gray-200/50'
         }`}>
           {/* Content */}
@@ -200,9 +200,9 @@ const FeedList: React.FC<FeedListProps> = ({ partnerId, isDarkMode = false }) =>
           <div className="flex items-center gap-2 mt-3">
             <input
               type="text"
-              className={`flex-1 border rounded-lg px-3 py-2 text-sm transition-all duration-150 focus:outline-none focus:ring-2 ${
+              className={`flex-1 min-w-0 border-2 rounded-xl px-3 py-2 text-sm transition-all duration-150 focus:outline-none focus:ring-2 ${
                 isDarkMode 
-                  ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:ring-pink-500/50 focus:border-pink-500' 
+                  ? 'bg-black border-purple-900 text-white placeholder-gray-500 focus:ring-pink-500/50 focus:border-pink-500' 
                   : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:ring-pink-300 focus:border-pink-300'
               }`}
               placeholder="Add a comment..."
@@ -211,7 +211,7 @@ const FeedList: React.FC<FeedListProps> = ({ partnerId, isDarkMode = false }) =>
               onKeyDown={e => { if (e.key === 'Enter') handleComment(item.id); }}
             />
             <button
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-150 active:scale-95 focus:outline-none focus:ring-2 ${
+              className={`flex-shrink-0 px-3 py-2 rounded-xl font-medium text-sm transition-all duration-150 active:scale-95 focus:outline-none focus:ring-2 ${
                 isDarkMode 
                   ? 'bg-pink-600 text-white hover:bg-pink-500 active:bg-pink-700 focus:ring-pink-500/50' 
                   : 'bg-pink-500 text-white hover:bg-pink-600 active:bg-pink-700 focus:ring-pink-300'

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Filter, MoreVertical, Trash2 } from 'lucide-react';
+import { Calendar, Filter, MoreVertical, Trash2, Edit3 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPartnerId } from '../firebase/moods';
-import { addBucketListItem, deleteBucketListItem, subscribeToSharedBucketList, BucketListItem } from '../firebase/dates';
+import { addBucketListItem, deleteBucketListItem, updateBucketListItem, subscribeToSharedBucketList, BucketListItem } from '../firebase/dates';
 import DateNightCountdown from './DateNightCountdown';
 
 interface VirtualDatesProps {
@@ -138,6 +138,10 @@ export default function VirtualDates({ isDarkMode = false }: VirtualDatesProps) 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState({ title: '', emoji: '🎉' });
   const [loading, setLoading] = useState(true);
+  
+  // Edit bucket item state
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
 
   // Load partner ID and bucket list with real-time sync
   useEffect(() => {
@@ -238,6 +242,36 @@ export default function VirtualDates({ isDarkMode = false }: VirtualDatesProps) 
     } catch (error) {
       console.error('Error adding custom item:', error);
     }
+  };
+
+  const handleEditBucketItem = (item: BucketListItem) => {
+    setEditingItemId(item.id);
+    setEditingTitle(item.title);
+    setActiveMenuId(null);
+  };
+
+  const handleSaveEditBucketItem = async () => {
+    if (!editingItemId || !editingTitle.trim() || !user?.uid) return;
+    
+    try {
+      const { error } = await updateBucketListItem(editingItemId, user.uid, { title: editingTitle.trim() });
+      
+      if (error) {
+        console.error('Error updating bucket item:', error);
+        alert('Failed to update item. Please try again.');
+      } else {
+        setEditingItemId(null);
+        setEditingTitle('');
+      }
+    } catch (error) {
+      console.error('Error updating bucket item:', error);
+      alert('Failed to update item. Please try again.');
+    }
+  };
+
+  const handleCancelEditBucketItem = () => {
+    setEditingItemId(null);
+    setEditingTitle('');
   };
 
   const handleDeleteBucketItem = async (itemId: string) => {
@@ -503,20 +537,18 @@ export default function VirtualDates({ isDarkMode = false }: VirtualDatesProps) 
         // Main Bucket List View
         <div className="max-w-4xl mx-auto">
           {/* Bucket List Section */}
-          <div className={`rounded-xl p-4 md:p-6 border mb-6 transition-colors ${
+          <div className={`rounded-xl p-4 md:p-6 shadow-lg border-2 mb-6 transition-colors ${
             isDarkMode 
-              ? 'bg-black border-blue-400 text-blue-100' 
-              : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+              ? 'bg-black border-pink-900' 
+              : 'bg-white border-gray-100'
           }`}>
             <div className="flex flex-col items-center justify-center mb-4 space-y-3">
-              <div className="flex items-center space-x-2">
-                <Calendar className={`w-5 h-5 ${
-                  isDarkMode ? 'text-blue-100' : 'text-blue-500'
-                }`} />
-                <h3 className={`text-xl md:text-xl font-bold transition-colors ${
-                  isDarkMode ? 'text-blue-100' : 'text-gray-800'
-                }`}>Bucket List</h3>
+              <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full w-fit mx-auto">
+                <Calendar className="w-6 h-6 text-white" />
               </div>
+              <h3 className={`text-lg font-bold transition-colors ${
+                isDarkMode ? 'text-white' : 'text-gray-800'
+              }`}>Bucket List</h3>
             </div>
 
             {/* <p className="text-sm text-gray-600 mb-4">Create a list of dates you want to try together</p> */}
@@ -556,11 +588,7 @@ export default function VirtualDates({ isDarkMode = false }: VirtualDatesProps) 
                   <div className="flex space-x-2">
                     <button
                       onClick={handleAddCustomItem}
-                      className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-                        isDarkMode 
-                          ? 'bg-white text-blue-600 hover:bg-gray-100' 
-                          : 'bg-blue-500 text-white hover:bg-blue-600'
-                      }`}
+                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg font-medium text-sm hover:opacity-90 transition"
                     >
                       Add to List
                     </button>
@@ -584,68 +612,109 @@ export default function VirtualDates({ isDarkMode = false }: VirtualDatesProps) 
               {bucketList.map(item => (
                 <div key={item.id} className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
                   isDarkMode
-                    ? 'bg-black border-blue-900 text-white'
-                    : 'bg-white border-blue-100'
+                    ? 'bg-gray-800/50 border-gray-700 text-white'
+                    : 'bg-gray-50 border-gray-200'
                 }`}>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-lg">📝</span>
-                    <div>
-                      <p className={`font-medium text-md transition-colors ${
-                        isDarkMode ? 'text-white' : 'text-gray-800'
-                      }`}>{item.title}</p>
-                      <p className={`text-[9px] opacity-50 transition-colors ${
-                        isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                      }`}>Added by {item.userName}</p>
+                  {editingItemId === item.id ? (
+                    // Edit mode
+                    <div className="flex items-center space-x-2 flex-1 mr-2">
+                      <span className="text-lg">📝</span>
+                      <input
+                        type="text"
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        className={`flex-1 px-2 py-1 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                          isDarkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveEditBucketItem();
+                          if (e.key === 'Escape') handleCancelEditBucketItem();
+                        }}
+                      />
+                      <button
+                        onClick={handleSaveEditBucketItem}
+                        className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancelEditBucketItem}
+                        className={`px-2 py-1 text-xs rounded transition-colors ${
+                          isDarkMode 
+                            ? 'bg-gray-600 text-gray-300 hover:bg-gray-500' 
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        Cancel
+                      </button>
                     </div>
-                  </div>
-                  <div className="relative">
-                    <button
-                      onClick={() => handleMenuToggle(`bucket-${item.id}`)}
-                      className={`p-1 rounded-full transition-colors inline-flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
-                        isDarkMode 
-                          ? 'hover:bg-gray-700 focus-visible:ring-blue-500' 
-                          : 'hover:bg-gray-100 focus-visible:ring-blue-500'
-                      }`}
-                    >
-                      <MoreVertical className={`w-4 h-4 ${
-                        isDarkMode ? 'text-gray-400' : 'text-gray-400'
-                      }`} />
-                    </button>
-                    
-                    {activeMenuId === `bucket-${item.id}` && (
-                      <div className={`menu-dropdown absolute right-0 top-8 rounded-lg shadow-lg border py-2 z-10 min-w-[120px] transition-colors ${
-                        isDarkMode
-                          ? 'bg-gray-800 border-gray-700'
-                          : 'bg-white border-gray-200'
-                      }`}>
+                  ) : (
+                    // Display mode
+                    <>
+                      <div className="flex items-center space-x-3">
+                        <span className="text-lg">📝</span>
+                        <div>
+                          <p className={`font-medium text-md transition-colors ${
+                            isDarkMode ? 'text-white' : 'text-gray-800'
+                          }`}>{item.title}</p>
+                          <p className={`text-[9px] opacity-50 transition-colors ${
+                            isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                          }`}>Added by {item.userName}</p>
+                        </div>
+                      </div>
+                      <div className="relative">
                         <button
-                          onClick={() => {
-                            // Edit functionality - could open a modal or inline edit
-                            console.log('Edit bucket item:', item);
-                            setActiveMenuId(null);
-                          }}
-                          className={`w-full flex items-center space-x-2 px-4 py-2 text-sm transition-colors ${
-                            isDarkMode
-                              ? 'text-gray-300 hover:bg-gray-700'
-                              : 'text-gray-700 hover:bg-gray-50'
+                          onClick={() => handleMenuToggle(`bucket-${item.id}`)}
+                          className={`p-1 rounded-full transition-colors inline-flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 ${
+                            isDarkMode 
+                              ? 'hover:bg-gray-700 focus-visible:ring-blue-500' 
+                              : 'hover:bg-gray-100 focus-visible:ring-blue-500'
                           }`}
                         >
-                          <MoreVertical className="w-4 h-4" />
-                          <span>Edit</span>
+                          <MoreVertical className={`w-4 h-4 ${
+                            isDarkMode ? 'text-gray-400' : 'text-gray-400'
+                          }`} />
                         </button>
-                        <button
-                          onClick={() => {
-                            console.log('Delete bucket item clicked:', item);
-                            handleDeleteBucketItem(item.id);
-                          }}
-                          className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span>Remove</span>
-                        </button>
+                        
+                        {activeMenuId === `bucket-${item.id}` && (
+                          <div className={`menu-dropdown absolute right-0 top-8 rounded-lg shadow-lg border py-2 z-10 min-w-[120px] transition-colors ${
+                            isDarkMode
+                              ? 'bg-gray-800 border-gray-700'
+                              : 'bg-white border-gray-200'
+                          }`}>
+                            <button
+                              onClick={() => handleEditBucketItem(item)}
+                              className={`w-full flex items-center space-x-2 px-4 py-2 text-sm transition-colors ${
+                                isDarkMode
+                                  ? 'text-gray-300 hover:bg-gray-700'
+                                  : 'text-gray-700 hover:bg-gray-50'
+                              }`}
+                            >
+                              <Edit3 className="w-4 h-4" />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                console.log('Delete bucket item clicked:', item);
+                                handleDeleteBucketItem(item.id);
+                              }}
+                              className={`w-full flex items-center space-x-2 px-4 py-2 text-sm transition-colors ${
+                                isDarkMode
+                                  ? 'text-red-400 hover:bg-gray-700'
+                                  : 'text-red-600 hover:bg-red-50'
+                              }`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span>Remove</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </>
+                  )}
                 </div>
               ))}
               
@@ -666,11 +735,7 @@ export default function VirtualDates({ isDarkMode = false }: VirtualDatesProps) 
             <div className="mt-4 text-center">
               <button
                 onClick={() => setShowAddForm(true)}
-                className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-                  isDarkMode 
-                    ? 'bg-blue-700 text-white hover:bg-blue-600' 
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                }`}
+                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg font-medium shadow hover:opacity-90 transition text-sm"
               >
                 Add Item
               </button>
