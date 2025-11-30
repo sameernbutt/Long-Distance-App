@@ -257,26 +257,32 @@ export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {
   // Loading state
   if (isLoading) {
     return (
-      <div className={`rounded-xl p-4 md:p-6 shadow-lg border-2 transition-colors ${
-        isDarkMode 
-          ? 'bg-black border-pink-900' 
-          : 'bg-white border-gray-100'
-      }`}>
-        <div className="flex flex-col items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mb-3"></div>
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading moods...</p>
+      <div className="p-4 md:p-6">
+        <div className="max-w-2xl mx-auto">
+          <div className={`rounded-xl p-4 md:p-6 shadow-lg border-2 transition-colors ${
+            isDarkMode 
+              ? 'bg-black border-pink-900' 
+              : 'bg-white border-gray-100'
+          }`}>
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mb-3"></div>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading moods...</p>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`rounded-xl p-4 md:p-6 shadow-lg border-2 transition-colors ${
-      isDarkMode 
-        ? 'bg-black border-pink-900' 
-        : 'bg-white border-gray-100'
-    }`}>
-      <div className="text-center mb-6">
+    <div className="p-4 md:p-6">
+      <div className="max-w-2xl mx-auto">
+        <div className={`rounded-xl p-4 md:p-6 shadow-lg border-2 transition-colors ${
+          isDarkMode 
+            ? 'bg-black border-pink-900' 
+            : 'bg-white border-gray-100'
+        }`}>
+          <div className="text-center mb-6">
         <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full w-fit mx-auto mb-3">
           <Heart className="w-6 h-6 text-white" />
         </div>
@@ -412,6 +418,8 @@ export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {
           </button>
           </div>
         )}
+      </div>
+        </div>
       </div>
     </div>
   );
