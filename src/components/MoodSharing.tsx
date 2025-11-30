@@ -160,6 +160,7 @@ export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [partnerProfile, setPartnerProfile] = useState<any | null>(null);
   const [isChoosingMood, setIsChoosingMood] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
 
   useEffect(() => {
@@ -173,6 +174,7 @@ export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {
   // Get partner ID and load partner moods
   useEffect(() => {
     const loadPartnerData = async () => {
+      setIsLoading(true);
       if (user?.uid) {
         const partner = await getPartnerId(user.uid);
         setPartnerId(partner);
@@ -198,9 +200,11 @@ export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {
             setPartnerMoods(moods);
           });
 
+          setIsLoading(false);
           return unsubscribe;
         }
       }
+      setIsLoading(false);
     };
 
     loadPartnerData();
@@ -249,6 +253,22 @@ export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {
     if (diffInHours < 24) return `${diffInHours}h ago`;
     return date.toLocaleDateString();
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className={`rounded-xl p-4 md:p-6 shadow-lg border-2 transition-colors ${
+        isDarkMode 
+          ? 'bg-black border-pink-900' 
+          : 'bg-white border-gray-100'
+      }`}>
+        <div className="flex flex-col items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mb-3"></div>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading moods...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`rounded-xl p-4 md:p-6 shadow-lg border-2 transition-colors ${
@@ -361,7 +381,8 @@ export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {
             Share Mood
           </button>
         ) : (
-          <div className="flex space-x-3 overflow-x-auto pb-2 mt-4 justify-center">
+          <div className="space-y-4">
+          <div className="flex space-x-3 overflow-x-auto pb-2 justify-center">
             {moods.map((mood) => (
               <button
                 key={mood.id}
@@ -378,6 +399,17 @@ export default function MoodSharing({ isDarkMode = false }: MoodSharingProps = {
                 <div className={`text-sm font-medium ${mood.color}`}>{mood.name}</div>
               </button>
             ))}
+          </div>
+          <button
+            onClick={() => setIsChoosingMood(false)}
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+              isDarkMode 
+                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Cancel
+          </button>
           </div>
         )}
       </div>

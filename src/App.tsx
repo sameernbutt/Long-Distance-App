@@ -457,7 +457,7 @@ function FeedPage({ isDarkMode = false }: { isDarkMode?: boolean }) {
           >
             <X className="w-6 h-6 drop-shadow-lg" />
           </button>
-          <MediaGallery />
+          <MediaGallery onClose={() => setShowPhotoVideo(false)} />
         </div>
       )}
       {showMusic && (

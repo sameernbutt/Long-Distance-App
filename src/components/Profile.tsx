@@ -30,6 +30,7 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingAnniversary, setIsEditingAnniversary] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Form data
   const [profileData, setProfileData] = useState({
@@ -41,8 +42,12 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
   // Load partner and anniversary data
   useEffect(() => {
     const loadData = async () => {
-      if (!user?.uid || isGuest) return;
+      if (!user?.uid || isGuest) {
+        setIsLoading(false);
+        return;
+      }
       
+      setIsLoading(true);
       try {
         // Load partner ID
         const pId = await getPartnerId(user.uid);
@@ -65,6 +70,8 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
         }
       } catch (error) {
         console.error('Error loading profile data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -165,6 +172,17 @@ export default function Profile({ onPairPartner, isDarkMode = false }: ProfilePr
           >
             Sign In
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-4 md:p-6 max-w-2xl mx-auto">
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-pink-500 mb-4"></div>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading profile...</p>
         </div>
       </div>
     );

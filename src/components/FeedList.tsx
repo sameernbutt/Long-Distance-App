@@ -62,9 +62,12 @@ const FeedList: React.FC<FeedListProps> = ({ partnerId, isDarkMode = false }) =>
     fetchFeed();
   };
 
-  if (loading) return <div className={`text-center transition-colors ${
-    isDarkMode ? 'text-gray-400' : 'text-gray-400'
-  }`}>Loading feed...</div>;
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center py-12">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mb-3"></div>
+      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading feed...</p>
+    </div>
+  );
 
   if (!feed.length) return <div className={`text-center transition-colors ${
     isDarkMode ? 'text-gray-400' : 'text-gray-400'

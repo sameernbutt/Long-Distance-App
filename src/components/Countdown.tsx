@@ -307,22 +307,20 @@ export default function Countdown({ isDarkMode = false }: CountdownProps) {
               >
                 {showSetReunion ? 'Set Reunion' : 'Save Changes'}
               </button>
-              {(countdownData.date || !showSetReunion) && (
-                <button
-                  onClick={() => {
-                    setIsEditing(false);
-                    setShowSetReunion(false);
-                    setEditData(countdownData);
-                  }}
-                  className={`px-6 py-3 rounded-xl border-2 transition-colors ${
-                    isDarkMode 
-                      ? 'bg-black border-purple-900 text-gray-300 hover:border-purple-800' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200'
-                  }`}
-                >
-                  Cancel
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  setIsEditing(false);
+                  setShowSetReunion(false);
+                  setEditData(countdownData);
+                }}
+                className={`px-6 py-3 rounded-xl border-2 transition-colors ${
+                  isDarkMode 
+                    ? 'bg-black border-purple-900 text-gray-300 hover:border-purple-800' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200'
+                }`}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         ) : (
